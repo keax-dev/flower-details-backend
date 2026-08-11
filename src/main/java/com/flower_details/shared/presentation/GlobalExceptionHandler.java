@@ -1,0 +1,111 @@
+package com.flower_details.shared.presentation;
+
+import com.flower_details.features.auth.application.exception.InvalidCredentialsException;
+import com.flower_details.features.auth.application.exception.UserInactiveException;
+import com.flower_details.features.users.application.exception.EmailAlreadyRegisteredException;
+import com.flower_details.features.users.application.exception.UserNotFoundException;
+import com.flower_details.shared.domain.DomainException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+class GlobalExceptionHandler {
+
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	ResponseEntity<ApiErrorResponse> handleValidation(
+			MethodArgumentNotValidException exception,
+			HttpServletRequest request
+	) {
+		Map<String, String> errors = new LinkedHashMap<>();
+		for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
+			errors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
+		}
+		return build(HttpStatus.BAD_REQUEST, "Solicitud invalida", "Revisa los datos enviados", request, errors);
+	}
+
+	@ExceptionHandler(EmailAlreadyRegisteredException.class)
+	ResponseEntity<ApiErrorResponse> handleEmailAlreadyRegistered(
+			EmailAlreadyRegisteredException exception,
+			HttpServletRequest request
+	) {
+		return build(HttpStatus.CONFLICT, "Correo duplicado", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(InvalidCredentialsException.class)
+	ResponseEntity<ApiErrorResponse> handleInvalidCredentials(
+			InvalidCredentialsException exception,
+			HttpServletRequest request
+	) {
+		return build(HttpStatus.UNAUTHORIZED, "Credenciales invalidas", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(UserInactiveException.class)
+	ResponseEntity<ApiErrorResponse> handleUserInactive(UserInactiveException exception, HttpServletRequest request) {
+		return build(HttpStatus.FORBIDDEN, "Usuario inactivo", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(UserNotFoundException.class)
+	ResponseEntity<ApiErrorResponse> handleUserNotFound(UserNotFoundException exception, HttpServletRequest request) {
+		return build(HttpStatus.NOT_FOUND, "Usuario no encontrado", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException exception, HttpServletRequest request) {
+		return build(HttpStatus.FORBIDDEN, "Acceso denegado", "No tienes permisos para esta accion", request);
+	}
+
+	@ExceptionHandler(DomainException.class)
+	ResponseEntity<ApiErrorResponse> handleDomain(DomainException exception, HttpServletRequest request) {
+		return build(HttpStatus.BAD_REQUEST, "Regla de negocio invalida", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	ResponseEntity<ApiErrorResponse> handleDataIntegrity(
+			DataIntegrityViolationException exception,
+			HttpServletRequest request
+	) {
+		return build(HttpStatus.CONFLICT, "Conflicto de datos", "No se pudo completar la operacion", request);
+	}
+
+	@ExceptionHandler(Exception.class)
+	ResponseEntity<ApiErrorResponse> handleUnexpected(Exception exception, HttpServletRequest request) {
+		return build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", "Ocurrio un error inesperado", request);
+	}
+
+	private static ResponseEntity<ApiErrorResponse> build(
+			HttpStatus status,
+			String error,
+			String message,
+			HttpServletRequest request
+	) {
+		return ResponseEntity.status(status)
+				.body(ApiErrorResponse.of(status.value(), error, message, request.getRequestURI()));
+	}
+
+	private static ResponseEntity<ApiErrorResponse> build(
+			HttpStatus status,
+			String error,
+			String message,
+			HttpServletRequest request,
+			Map<String, String> validationErrors
+	) {
+		return ResponseEntity.status(status)
+				.body(ApiErrorResponse.withValidationErrors(
+						status.value(),
+						error,
+						message,
+						request.getRequestURI(),
+						validationErrors
+				));
+	}
+}
