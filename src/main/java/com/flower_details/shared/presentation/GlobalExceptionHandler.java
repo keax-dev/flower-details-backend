@@ -2,6 +2,8 @@ package com.flower_details.shared.presentation;
 
 import com.flower_details.features.auth.application.exception.InvalidCredentialsException;
 import com.flower_details.features.auth.application.exception.UserInactiveException;
+import com.flower_details.features.catalog.application.exception.CategoryNotFoundException;
+import com.flower_details.features.catalog.application.exception.CategoryTitleAlreadyExistsException;
 import com.flower_details.features.users.application.exception.EmailAlreadyRegisteredException;
 import com.flower_details.features.users.application.exception.UserNotFoundException;
 import com.flower_details.shared.domain.DomainException;
@@ -41,6 +43,14 @@ class GlobalExceptionHandler {
 		return build(HttpStatus.CONFLICT, "Correo duplicado", exception.getMessage(), request);
 	}
 
+	@ExceptionHandler(CategoryTitleAlreadyExistsException.class)
+	ResponseEntity<ApiErrorResponse> handleCategoryTitleAlreadyExists(
+			CategoryTitleAlreadyExistsException exception,
+			HttpServletRequest request
+	) {
+		return build(HttpStatus.CONFLICT, "Categoria duplicada", exception.getMessage(), request);
+	}
+
 	@ExceptionHandler(InvalidCredentialsException.class)
 	ResponseEntity<ApiErrorResponse> handleInvalidCredentials(
 			InvalidCredentialsException exception,
@@ -57,6 +67,14 @@ class GlobalExceptionHandler {
 	@ExceptionHandler(UserNotFoundException.class)
 	ResponseEntity<ApiErrorResponse> handleUserNotFound(UserNotFoundException exception, HttpServletRequest request) {
 		return build(HttpStatus.NOT_FOUND, "Usuario no encontrado", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(CategoryNotFoundException.class)
+	ResponseEntity<ApiErrorResponse> handleCategoryNotFound(
+			CategoryNotFoundException exception,
+			HttpServletRequest request
+	) {
+		return build(HttpStatus.NOT_FOUND, "Categoria no encontrada", exception.getMessage(), request);
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)
