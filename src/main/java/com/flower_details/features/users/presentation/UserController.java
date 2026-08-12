@@ -8,6 +8,7 @@ import com.flower_details.features.users.application.port.in.ListUsersUseCase;
 import com.flower_details.features.users.presentation.dto.CreateOperatorRequest;
 import com.flower_details.features.users.presentation.dto.UserResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,24 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 class UserController {
 
 	private final GetUserProfileUseCase getUserProfileUseCase;
 	private final ListUsersUseCase listUsersUseCase;
 	private final CreateOperatorUseCase createOperatorUseCase;
 	private final DeleteUserUseCase deleteUserUseCase;
-
-	UserController(
-			GetUserProfileUseCase getUserProfileUseCase,
-			ListUsersUseCase listUsersUseCase,
-			CreateOperatorUseCase createOperatorUseCase,
-			DeleteUserUseCase deleteUserUseCase
-	) {
-		this.getUserProfileUseCase = getUserProfileUseCase;
-		this.listUsersUseCase = listUsersUseCase;
-		this.createOperatorUseCase = createOperatorUseCase;
-		this.deleteUserUseCase = deleteUserUseCase;
-	}
 
 	@GetMapping("/api/me")
 	UserResponse me(@AuthenticationPrincipal AuthenticatedUserPrincipal principal) {

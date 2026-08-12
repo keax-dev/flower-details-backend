@@ -4,21 +4,18 @@ import com.flower_details.features.catalog.infrastructure.persistence.CategoryJp
 import com.flower_details.features.product.application.port.out.ProductRepositoryPort;
 import com.flower_details.features.product.domain.model.Product;
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 class ProductPersistenceAdapter implements ProductRepositoryPort {
 
 	private final SpringDataProductJpaRepository repository;
 	private final EntityManager entityManager;
-
-	ProductPersistenceAdapter(SpringDataProductJpaRepository repository, EntityManager entityManager) {
-		this.repository = repository;
-		this.entityManager = entityManager;
-	}
 
 	@Override
 	public Product save(Product product) {

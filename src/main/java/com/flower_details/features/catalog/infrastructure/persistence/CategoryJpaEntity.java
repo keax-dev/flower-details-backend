@@ -11,11 +11,18 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
 @Entity
 @SoftDelete(columnName = "deleted_at", strategy = SoftDeleteType.TIMESTAMP)
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 @Table(
 		name = "categories",
 		uniqueConstraints = @UniqueConstraint(name = "uk_categories_title", columnNames = "title")
@@ -41,25 +48,6 @@ public class CategoryJpaEntity {
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
 
-	protected CategoryJpaEntity() {
-	}
-
-	CategoryJpaEntity(
-			Long id,
-			String title,
-			String description,
-			boolean active,
-			Instant createdAt,
-			Instant updatedAt
-	) {
-		this.id = id;
-		this.title = title;
-		this.description = description;
-		this.active = active;
-		this.createdAt = createdAt;
-		this.updatedAt = updatedAt;
-	}
-
 	@PrePersist
 	void prePersist() {
 		Instant now = Instant.now();
@@ -74,27 +62,4 @@ public class CategoryJpaEntity {
 		updatedAt = Instant.now();
 	}
 
-	public Long getId() {
-		return id;
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public Instant getCreatedAt() {
-		return createdAt;
-	}
-
-	public Instant getUpdatedAt() {
-		return updatedAt;
-	}
 }

@@ -15,6 +15,7 @@ import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.shared.domain.DomainException;
 import com.flower_details.shared.security.PasswordHasher;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserApplicationService implements
 		CreateOperatorUseCase,
 		DeleteUserUseCase,
@@ -34,16 +36,6 @@ public class UserApplicationService implements
 	private final UserRepositoryPort userRepository;
 	private final PersonRepositoryPort personRepository;
 	private final PasswordHasher passwordHasher;
-
-	public UserApplicationService(
-			UserRepositoryPort userRepository,
-			PersonRepositoryPort personRepository,
-			PasswordHasher passwordHasher
-	) {
-		this.userRepository = userRepository;
-		this.personRepository = personRepository;
-		this.passwordHasher = passwordHasher;
-	}
 
 	@Override
 	@Transactional

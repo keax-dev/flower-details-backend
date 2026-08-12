@@ -13,6 +13,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ import java.util.List;
 @Validated
 @RestController
 @RequestMapping("/api/products")
+@RequiredArgsConstructor
 class ProductController {
 
 	private final ListProductsUseCase listProductsUseCase;
@@ -41,20 +43,6 @@ class ProductController {
 	private final CreateProductUseCase createProductUseCase;
 	private final UpdateProductUseCase updateProductUseCase;
 	private final DeleteProductUseCase deleteProductUseCase;
-
-	ProductController(
-			ListProductsUseCase listProductsUseCase,
-			GetProductUseCase getProductUseCase,
-			CreateProductUseCase createProductUseCase,
-			UpdateProductUseCase updateProductUseCase,
-			DeleteProductUseCase deleteProductUseCase
-	) {
-		this.listProductsUseCase = listProductsUseCase;
-		this.getProductUseCase = getProductUseCase;
-		this.createProductUseCase = createProductUseCase;
-		this.updateProductUseCase = updateProductUseCase;
-		this.deleteProductUseCase = deleteProductUseCase;
-	}
 
 	@GetMapping
 	List<ProductResponse> listProducts() {

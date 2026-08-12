@@ -14,12 +14,19 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
 @SoftDelete(columnName = "deleted_at", strategy = SoftDeleteType.TIMESTAMP)
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 @Table(name = "products")
 class ProductJpaEntity {
 
@@ -53,29 +60,6 @@ class ProductJpaEntity {
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
 
-	protected ProductJpaEntity() {
-	}
-
-	ProductJpaEntity(
-			Long id,
-			CategoryJpaEntity category,
-			String title,
-			String description,
-			BigDecimal price,
-			boolean active,
-			Instant createdAt,
-			Instant updatedAt
-	) {
-		this.id = id;
-		this.category = category;
-		this.title = title;
-		this.description = description;
-		this.price = price;
-		this.active = active;
-		this.createdAt = createdAt;
-		this.updatedAt = updatedAt;
-	}
-
 	@PrePersist
 	void prePersist() {
 		Instant now = Instant.now();
@@ -90,35 +74,7 @@ class ProductJpaEntity {
 		updatedAt = Instant.now();
 	}
 
-	public Long getId() {
-		return id;
-	}
-
 	public Long getCategoryId() {
 		return category.getId();
-	}
-
-	public String getTitle() {
-		return title;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public BigDecimal getPrice() {
-		return price;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public Instant getCreatedAt() {
-		return createdAt;
-	}
-
-	public Instant getUpdatedAt() {
-		return updatedAt;
 	}
 }

@@ -16,28 +16,18 @@ import com.flower_details.features.users.application.port.out.UserRepositoryPort
 import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.shared.security.PasswordHasher;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AuthApplicationService implements RegisterCustomerUseCase, LoginUseCase {
 
 	private final UserRepositoryPort userRepository;
 	private final PersonRepositoryPort personRepository;
 	private final PasswordHasher passwordHasher;
 	private final TokenProviderPort tokenProvider;
-
-	public AuthApplicationService(
-			UserRepositoryPort userRepository,
-			PersonRepositoryPort personRepository,
-			PasswordHasher passwordHasher,
-			TokenProviderPort tokenProvider
-	) {
-		this.userRepository = userRepository;
-		this.personRepository = personRepository;
-		this.passwordHasher = passwordHasher;
-		this.tokenProvider = tokenProvider;
-	}
 
 	@Override
 	@Transactional

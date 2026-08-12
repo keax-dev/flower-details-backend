@@ -3,6 +3,7 @@ package com.flower_details.features.product.infrastructure.persistence;
 import com.flower_details.features.product.application.port.out.ProductImageRepositoryPort;
 import com.flower_details.features.product.domain.model.ProductImage;
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -10,15 +11,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 class ProductImagePersistenceAdapter implements ProductImageRepositoryPort {
 
 	private final SpringDataProductImageJpaRepository repository;
 	private final EntityManager entityManager;
-
-	ProductImagePersistenceAdapter(SpringDataProductImageJpaRepository repository, EntityManager entityManager) {
-		this.repository = repository;
-		this.entityManager = entityManager;
-	}
 
 	@Override
 	public List<ProductImage> saveAll(List<ProductImage> images) {

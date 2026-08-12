@@ -2,6 +2,7 @@ package com.flower_details.features.users.infrastructure.persistence;
 
 import com.flower_details.features.users.application.port.out.UserRepositoryPort;
 import com.flower_details.features.users.domain.model.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -9,13 +10,10 @@ import java.util.Locale;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 class UserPersistenceAdapter implements UserRepositoryPort {
 
 	private final SpringDataUserJpaRepository repository;
-
-	UserPersistenceAdapter(SpringDataUserJpaRepository repository) {
-		this.repository = repository;
-	}
 
 	@Override
 	public User save(User user) {

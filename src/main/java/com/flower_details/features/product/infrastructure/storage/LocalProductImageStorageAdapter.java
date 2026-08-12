@@ -5,6 +5,7 @@ import com.flower_details.features.product.application.dto.StoredFileContent;
 import com.flower_details.features.product.application.dto.UploadFile;
 import com.flower_details.features.product.application.exception.FileStorageException;
 import com.flower_details.features.product.application.port.out.ProductImageStoragePort;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -17,13 +18,10 @@ import java.util.Set;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 class LocalProductImageStorageAdapter implements ProductImageStoragePort {
 
 	private final ProductImageStorageProperties properties;
-
-	LocalProductImageStorageAdapter(ProductImageStorageProperties properties) {
-		this.properties = properties;
-	}
 
 	@Override
 	public StoredFile store(UploadFile file) {

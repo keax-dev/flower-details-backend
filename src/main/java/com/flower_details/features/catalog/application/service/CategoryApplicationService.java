@@ -11,12 +11,14 @@ import com.flower_details.features.catalog.application.port.in.ListCategoriesUse
 import com.flower_details.features.catalog.application.port.in.UpdateCategoryUseCase;
 import com.flower_details.features.catalog.application.port.out.CategoryRepositoryPort;
 import com.flower_details.features.catalog.domain.model.Category;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryApplicationService implements
 		ListCategoriesUseCase,
 		CreateCategoryUseCase,
@@ -24,10 +26,6 @@ public class CategoryApplicationService implements
 		DeleteCategoryUseCase {
 
 	private final CategoryRepositoryPort categoryRepository;
-
-	public CategoryApplicationService(CategoryRepositoryPort categoryRepository) {
-		this.categoryRepository = categoryRepository;
-	}
 
 	@Override
 	@Transactional(readOnly = true)

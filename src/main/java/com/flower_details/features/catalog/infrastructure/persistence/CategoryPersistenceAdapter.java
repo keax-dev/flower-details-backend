@@ -2,6 +2,7 @@ package com.flower_details.features.catalog.infrastructure.persistence;
 
 import com.flower_details.features.catalog.application.port.out.CategoryRepositoryPort;
 import com.flower_details.features.catalog.domain.model.Category;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -10,13 +11,10 @@ import java.util.Locale;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 class CategoryPersistenceAdapter implements CategoryRepositoryPort {
 
 	private final SpringDataCategoryJpaRepository repository;
-
-	CategoryPersistenceAdapter(SpringDataCategoryJpaRepository repository) {
-		this.repository = repository;
-	}
 
 	@Override
 	public Category save(Category category) {

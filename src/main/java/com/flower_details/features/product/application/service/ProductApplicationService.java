@@ -23,6 +23,7 @@ import com.flower_details.features.catalog.domain.model.Category;
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.model.ProductImage;
 import com.flower_details.shared.domain.DomainException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ProductApplicationService implements
 		ListProductsUseCase,
 		GetProductUseCase,
@@ -46,18 +48,6 @@ public class ProductApplicationService implements
 	private final ProductImageRepositoryPort productImageRepository;
 	private final CategoryRepositoryPort categoryRepository;
 	private final ProductImageStoragePort productImageStorage;
-
-	public ProductApplicationService(
-			ProductRepositoryPort productRepository,
-			ProductImageRepositoryPort productImageRepository,
-			CategoryRepositoryPort categoryRepository,
-			ProductImageStoragePort productImageStorage
-	) {
-		this.productRepository = productRepository;
-		this.productImageRepository = productImageRepository;
-		this.categoryRepository = categoryRepository;
-		this.productImageStorage = productImageStorage;
-	}
 
 	@Override
 	@Transactional(readOnly = true)

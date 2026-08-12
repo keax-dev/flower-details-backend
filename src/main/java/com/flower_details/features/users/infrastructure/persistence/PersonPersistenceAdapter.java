@@ -3,6 +3,7 @@ package com.flower_details.features.users.infrastructure.persistence;
 import com.flower_details.features.users.application.port.out.PersonRepositoryPort;
 import com.flower_details.features.users.domain.model.Person;
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -10,15 +11,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 class PersonPersistenceAdapter implements PersonRepositoryPort {
 
 	private final SpringDataPersonJpaRepository repository;
 	private final EntityManager entityManager;
-
-	PersonPersistenceAdapter(SpringDataPersonJpaRepository repository, EntityManager entityManager) {
-		this.repository = repository;
-		this.entityManager = entityManager;
-	}
 
 	@Override
 	public Person save(Person person) {

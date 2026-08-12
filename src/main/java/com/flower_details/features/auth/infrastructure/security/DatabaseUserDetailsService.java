@@ -1,6 +1,7 @@
 package com.flower_details.features.auth.infrastructure.security;
 
 import com.flower_details.features.users.application.port.out.UserRepositoryPort;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,13 +11,10 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 class DatabaseUserDetailsService implements UserDetailsService {
 
 	private final UserRepositoryPort userRepository;
-
-	DatabaseUserDetailsService(UserRepositoryPort userRepository) {
-		this.userRepository = userRepository;
-	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) {

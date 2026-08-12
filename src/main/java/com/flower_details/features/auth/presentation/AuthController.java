@@ -8,6 +8,7 @@ import com.flower_details.features.auth.presentation.dto.AuthResponse;
 import com.flower_details.features.auth.presentation.dto.LoginRequest;
 import com.flower_details.features.auth.presentation.dto.RegisterCustomerRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,21 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 class AuthController {
 
 	private final RegisterCustomerUseCase registerCustomerUseCase;
 	private final LoginUseCase loginUseCase;
 	private final AuthCookieManager authCookieManager;
-
-	AuthController(
-			RegisterCustomerUseCase registerCustomerUseCase,
-			LoginUseCase loginUseCase,
-			AuthCookieManager authCookieManager
-	) {
-		this.registerCustomerUseCase = registerCustomerUseCase;
-		this.loginUseCase = loginUseCase;
-		this.authCookieManager = authCookieManager;
-	}
 
 	@PostMapping("/register")
 	ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterCustomerRequest request) {

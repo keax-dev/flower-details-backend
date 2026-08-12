@@ -15,11 +15,18 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
 @Entity
 @SoftDelete(columnName = "deleted_at", strategy = SoftDeleteType.TIMESTAMP)
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 @Table(
 		name = "people",
 		uniqueConstraints = {
@@ -60,29 +67,6 @@ class PersonJpaEntity {
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
 
-	protected PersonJpaEntity() {
-	}
-
-	PersonJpaEntity(
-			Long id,
-			UserJpaEntity user,
-			String names,
-			String lastnames,
-			String phone,
-			String documentNumber,
-			Instant createdAt,
-			Instant updatedAt
-	) {
-		this.id = id;
-		this.user = user;
-		this.names = names;
-		this.lastnames = lastnames;
-		this.phone = phone;
-		this.documentNumber = documentNumber;
-		this.createdAt = createdAt;
-		this.updatedAt = updatedAt;
-	}
-
 	@PrePersist
 	void prePersist() {
 		Instant now = Instant.now();
@@ -97,35 +81,7 @@ class PersonJpaEntity {
 		updatedAt = Instant.now();
 	}
 
-	public Long getId() {
-		return id;
-	}
-
 	public Long getUserId() {
 		return user.getId();
-	}
-
-	public String getNames() {
-		return names;
-	}
-
-	public String getLastnames() {
-		return lastnames;
-	}
-
-	public String getPhone() {
-		return phone;
-	}
-
-	public String getDocumentNumber() {
-		return documentNumber;
-	}
-
-	public Instant getCreatedAt() {
-		return createdAt;
-	}
-
-	public Instant getUpdatedAt() {
-		return updatedAt;
 	}
 }

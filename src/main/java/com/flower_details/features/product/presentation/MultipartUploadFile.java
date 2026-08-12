@@ -1,18 +1,16 @@
 package com.flower_details.features.product.presentation;
 
 import com.flower_details.features.product.application.dto.UploadFile;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+@RequiredArgsConstructor
 class MultipartUploadFile implements UploadFile {
 
 	private final MultipartFile file;
-
-	MultipartUploadFile(MultipartFile file) {
-		this.file = file;
-	}
 
 	@Override
 	public String originalFilename() {

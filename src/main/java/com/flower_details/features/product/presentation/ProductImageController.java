@@ -2,6 +2,7 @@ package com.flower_details.features.product.presentation;
 
 import com.flower_details.features.product.application.dto.StoredFileContent;
 import com.flower_details.features.product.application.port.in.GetProductImageFileUseCase;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -16,13 +17,10 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/product-images")
+@RequiredArgsConstructor
 class ProductImageController {
 
 	private final GetProductImageFileUseCase getProductImageFileUseCase;
-
-	ProductImageController(GetProductImageFileUseCase getProductImageFileUseCase) {
-		this.getProductImageFileUseCase = getProductImageFileUseCase;
-	}
 
 	@GetMapping("/{storedFileName}")
 	ResponseEntity<byte[]> getProductImage(@PathVariable String storedFileName) {

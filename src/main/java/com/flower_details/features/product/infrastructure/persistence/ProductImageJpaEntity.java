@@ -14,11 +14,18 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
 @Entity
 @SoftDelete(columnName = "deleted_at", strategy = SoftDeleteType.TIMESTAMP)
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 @Table(
 		name = "product_images",
 		uniqueConstraints = @UniqueConstraint(name = "uk_product_images_stored_file_name", columnNames = "stored_file_name")
@@ -64,35 +71,6 @@ class ProductImageJpaEntity {
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
 
-	protected ProductImageJpaEntity() {
-	}
-
-	ProductImageJpaEntity(
-			Long id,
-			ProductJpaEntity product,
-			String url,
-			String storedFileName,
-			String originalFileName,
-			String contentType,
-			long sizeBytes,
-			int sortOrder,
-			boolean active,
-			Instant createdAt,
-			Instant updatedAt
-	) {
-		this.id = id;
-		this.product = product;
-		this.url = url;
-		this.storedFileName = storedFileName;
-		this.originalFileName = originalFileName;
-		this.contentType = contentType;
-		this.sizeBytes = sizeBytes;
-		this.sortOrder = sortOrder;
-		this.active = active;
-		this.createdAt = createdAt;
-		this.updatedAt = updatedAt;
-	}
-
 	@PrePersist
 	void prePersist() {
 		Instant now = Instant.now();
@@ -107,47 +85,7 @@ class ProductImageJpaEntity {
 		updatedAt = Instant.now();
 	}
 
-	public Long getId() {
-		return id;
-	}
-
 	public Long getProductId() {
 		return product.getId();
-	}
-
-	public String getUrl() {
-		return url;
-	}
-
-	public String getStoredFileName() {
-		return storedFileName;
-	}
-
-	public String getOriginalFileName() {
-		return originalFileName;
-	}
-
-	public String getContentType() {
-		return contentType;
-	}
-
-	public long getSizeBytes() {
-		return sizeBytes;
-	}
-
-	public int getSortOrder() {
-		return sortOrder;
-	}
-
-	public boolean isActive() {
-		return active;
-	}
-
-	public Instant getCreatedAt() {
-		return createdAt;
-	}
-
-	public Instant getUpdatedAt() {
-		return updatedAt;
 	}
 }

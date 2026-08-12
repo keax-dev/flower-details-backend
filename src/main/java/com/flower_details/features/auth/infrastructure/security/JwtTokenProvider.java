@@ -4,6 +4,7 @@ import com.flower_details.features.auth.application.port.out.TokenClaims;
 import com.flower_details.features.auth.application.port.out.TokenProviderPort;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 class JwtTokenProvider implements TokenProviderPort {
 
 	private static final String HMAC_ALGORITHM = "HmacSHA256";
@@ -28,11 +30,6 @@ class JwtTokenProvider implements TokenProviderPort {
 
 	private final JwtProperties properties;
 	private final ObjectMapper objectMapper;
-
-	JwtTokenProvider(JwtProperties properties, ObjectMapper objectMapper) {
-		this.properties = properties;
-		this.objectMapper = objectMapper;
-	}
 
 	@Override
 	public String generate(User user) {

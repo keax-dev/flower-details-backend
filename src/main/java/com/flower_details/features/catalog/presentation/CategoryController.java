@@ -8,6 +8,7 @@ import com.flower_details.features.catalog.presentation.dto.CategoryResponse;
 import com.flower_details.features.catalog.presentation.dto.CreateCategoryRequest;
 import com.flower_details.features.catalog.presentation.dto.UpdateCategoryRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,24 +25,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/categories")
+@RequiredArgsConstructor
 class CategoryController {
 
 	private final ListCategoriesUseCase listCategoriesUseCase;
 	private final CreateCategoryUseCase createCategoryUseCase;
 	private final UpdateCategoryUseCase updateCategoryUseCase;
 	private final DeleteCategoryUseCase deleteCategoryUseCase;
-
-	CategoryController(
-			ListCategoriesUseCase listCategoriesUseCase,
-			CreateCategoryUseCase createCategoryUseCase,
-			UpdateCategoryUseCase updateCategoryUseCase,
-			DeleteCategoryUseCase deleteCategoryUseCase
-	) {
-		this.listCategoriesUseCase = listCategoriesUseCase;
-		this.createCategoryUseCase = createCategoryUseCase;
-		this.updateCategoryUseCase = updateCategoryUseCase;
-		this.deleteCategoryUseCase = deleteCategoryUseCase;
-	}
 
 	@GetMapping
 	List<CategoryResponse> listCategories() {

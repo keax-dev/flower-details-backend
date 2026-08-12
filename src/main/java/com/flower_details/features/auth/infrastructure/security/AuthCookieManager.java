@@ -2,6 +2,7 @@ package com.flower_details.features.auth.infrastructure.security;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
@@ -10,13 +11,10 @@ import java.util.Arrays;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class AuthCookieManager {
 
 	private final AuthCookieProperties properties;
-
-	AuthCookieManager(AuthCookieProperties properties) {
-		this.properties = properties;
-	}
 
 	public ResponseCookie createAccessTokenCookie(String token, long expiresInSeconds) {
 		ResponseCookie.ResponseCookieBuilder builder = baseCookie(token)

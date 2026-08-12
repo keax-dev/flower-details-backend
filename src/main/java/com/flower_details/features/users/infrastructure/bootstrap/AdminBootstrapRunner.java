@@ -6,30 +6,20 @@ import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.shared.security.PasswordHasher;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@RequiredArgsConstructor
 class AdminBootstrapRunner implements ApplicationRunner {
 
 	private final AdminBootstrapProperties properties;
 	private final UserRepositoryPort userRepository;
 	private final PersonRepositoryPort personRepository;
 	private final PasswordHasher passwordHasher;
-
-	AdminBootstrapRunner(
-			AdminBootstrapProperties properties,
-			UserRepositoryPort userRepository,
-			PersonRepositoryPort personRepository,
-			PasswordHasher passwordHasher
-	) {
-		this.properties = properties;
-		this.userRepository = userRepository;
-		this.personRepository = personRepository;
-		this.passwordHasher = passwordHasher;
-	}
 
 	@Override
 	@Transactional
