@@ -4,6 +4,9 @@ import com.flower_details.features.auth.application.exception.InvalidCredentials
 import com.flower_details.features.auth.application.exception.UserInactiveException;
 import com.flower_details.features.catalog.application.exception.CategoryNotFoundException;
 import com.flower_details.features.catalog.application.exception.CategoryTitleAlreadyExistsException;
+import com.flower_details.features.product.application.exception.FileStorageException;
+import com.flower_details.features.product.application.exception.ProductImageNotFoundException;
+import com.flower_details.features.product.application.exception.ProductNotFoundException;
 import com.flower_details.features.users.application.exception.EmailAlreadyRegisteredException;
 import com.flower_details.features.users.application.exception.UserNotFoundException;
 import com.flower_details.shared.domain.DomainException;
@@ -77,9 +80,30 @@ class GlobalExceptionHandler {
 		return build(HttpStatus.NOT_FOUND, "Categoria no encontrada", exception.getMessage(), request);
 	}
 
+	@ExceptionHandler(ProductNotFoundException.class)
+	ResponseEntity<ApiErrorResponse> handleProductNotFound(
+			ProductNotFoundException exception,
+			HttpServletRequest request
+	) {
+		return build(HttpStatus.NOT_FOUND, "Producto no encontrado", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(ProductImageNotFoundException.class)
+	ResponseEntity<ApiErrorResponse> handleProductImageNotFound(
+			ProductImageNotFoundException exception,
+			HttpServletRequest request
+	) {
+		return build(HttpStatus.NOT_FOUND, "Imagen no encontrada", exception.getMessage(), request);
+	}
+
 	@ExceptionHandler(AccessDeniedException.class)
 	ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException exception, HttpServletRequest request) {
 		return build(HttpStatus.FORBIDDEN, "Acceso denegado", "No tienes permisos para esta accion", request);
+	}
+
+	@ExceptionHandler(FileStorageException.class)
+	ResponseEntity<ApiErrorResponse> handleFileStorage(FileStorageException exception, HttpServletRequest request) {
+		return build(HttpStatus.BAD_REQUEST, "Imagen invalida", exception.getMessage(), request);
 	}
 
 	@ExceptionHandler(DomainException.class)

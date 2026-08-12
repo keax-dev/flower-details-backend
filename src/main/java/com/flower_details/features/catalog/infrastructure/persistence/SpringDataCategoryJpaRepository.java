@@ -2,6 +2,7 @@ package com.flower_details.features.catalog.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,8 @@ interface SpringDataCategoryJpaRepository extends JpaRepository<CategoryJpaEntit
 	boolean existsByTitleIgnoreCase(String title);
 
 	boolean existsByTitleIgnoreCaseAndIdNot(String title, Long id);
+
+	List<CategoryJpaEntity> findByIdIn(Collection<Long> ids);
 
 	List<CategoryJpaEntity> findAllByActiveTrueOrderByTitleAsc();
 }

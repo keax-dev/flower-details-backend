@@ -38,7 +38,13 @@ class SecurityConfig {
 						})
 				)
 				.authorizeHttpRequests(authorize -> authorize
-						.requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
+						.requestMatchers(
+								HttpMethod.GET,
+								"/api/categories",
+								"/api/products",
+								"/api/products/*",
+								"/api/product-images/*"
+						).permitAll()
 						.requestMatchers(
 								HttpMethod.POST,
 								"/api/auth/register",

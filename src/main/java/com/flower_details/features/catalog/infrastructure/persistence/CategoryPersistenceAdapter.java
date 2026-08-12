@@ -4,6 +4,7 @@ import com.flower_details.features.catalog.application.port.out.CategoryReposito
 import com.flower_details.features.catalog.domain.model.Category;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -31,6 +32,17 @@ class CategoryPersistenceAdapter implements CategoryRepositoryPort {
 	@Override
 	public Optional<Category> findById(Long id) {
 		return repository.findById(id).map(CategoryPersistenceMapper::toDomain);
+	}
+
+	@Override
+	public List<Category> findByIds(Collection<Long> ids) {
+		if (ids.isEmpty()) {
+			return List.of();
+		}
+		return repository.findByIdIn(ids)
+				.stream()
+				.map(CategoryPersistenceMapper::toDomain)
+				.toList();
 	}
 
 	@Override
