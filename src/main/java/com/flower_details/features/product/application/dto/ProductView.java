@@ -1,6 +1,6 @@
 package com.flower_details.features.product.application.dto;
 
-import com.flower_details.features.catalog.domain.model.Category;
+import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.model.ProductImage;
 

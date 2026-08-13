@@ -6,7 +6,7 @@ import com.flower_details.features.product.application.dto.StoredFile;
 import com.flower_details.features.product.application.dto.StoredFileContent;
 import com.flower_details.features.product.application.dto.UpdateProductCommand;
 import com.flower_details.features.product.application.dto.UploadFile;
-import com.flower_details.features.catalog.application.exception.CategoryNotFoundException;
+import com.flower_details.features.category.application.exception.CategoryNotFoundException;
 import com.flower_details.features.product.application.exception.ProductImageNotFoundException;
 import com.flower_details.features.product.application.exception.ProductNotFoundException;
 import com.flower_details.features.product.application.port.in.CreateProductUseCase;
@@ -15,11 +15,11 @@ import com.flower_details.features.product.application.port.in.GetProductImageFi
 import com.flower_details.features.product.application.port.in.GetProductUseCase;
 import com.flower_details.features.product.application.port.in.ListProductsUseCase;
 import com.flower_details.features.product.application.port.in.UpdateProductUseCase;
-import com.flower_details.features.catalog.application.port.out.CategoryRepositoryPort;
+import com.flower_details.features.category.domain.repository.CategoryRepository;
 import com.flower_details.features.product.application.port.out.ProductImageRepositoryPort;
 import com.flower_details.features.product.application.port.out.ProductImageStoragePort;
 import com.flower_details.features.product.application.port.out.ProductRepositoryPort;
-import com.flower_details.features.catalog.domain.model.Category;
+import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.model.ProductImage;
 import com.flower_details.shared.domain.DomainException;
@@ -46,7 +46,7 @@ public class ProductApplicationService implements
 
 	private final ProductRepositoryPort productRepository;
 	private final ProductImageRepositoryPort productImageRepository;
-	private final CategoryRepositoryPort categoryRepository;
+	private final CategoryRepository categoryRepository;
 	private final ProductImageStoragePort productImageStorage;
 	private final ProductImageFileLifecycle productImageFileLifecycle;
 

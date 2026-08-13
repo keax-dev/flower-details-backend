@@ -1,8 +1,8 @@
 package com.flower_details.features.product;
 
-import com.flower_details.features.catalog.application.port.out.CategoryRepositoryPort;
+import com.flower_details.features.category.domain.repository.CategoryRepository;
 import com.flower_details.features.product.application.port.out.ProductRepositoryPort;
-import com.flower_details.features.catalog.domain.model.Category;
+import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.users.application.port.out.PersonRepositoryPort;
 import com.flower_details.features.users.application.port.out.UserRepositoryPort;
 import com.flower_details.features.users.domain.model.Person;
@@ -22,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,7 +48,7 @@ class ProductIntegrationTests {
 	private MockMvc mockMvc;
 
 	@Autowired
-	private CategoryRepositoryPort categoryRepository;
+	private CategoryRepository categoryRepository;
 
 	@Autowired
 	private ProductRepositoryPort productRepository;

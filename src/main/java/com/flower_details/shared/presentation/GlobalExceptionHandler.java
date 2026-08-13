@@ -2,8 +2,8 @@ package com.flower_details.shared.presentation;
 
 import com.flower_details.features.auth.application.exception.InvalidCredentialsException;
 import com.flower_details.features.auth.application.exception.UserInactiveException;
-import com.flower_details.features.catalog.application.exception.CategoryNotFoundException;
-import com.flower_details.features.catalog.application.exception.CategoryTitleAlreadyExistsException;
+import com.flower_details.features.category.application.exception.CategoryNotFoundException;
+import com.flower_details.features.category.application.exception.CategoryTitleAlreadyExistsException;
 import com.flower_details.features.product.application.exception.FileStorageException;
 import com.flower_details.features.product.application.exception.ProductImageNotFoundException;
 import com.flower_details.features.product.application.exception.ProductNotFoundException;
