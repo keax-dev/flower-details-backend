@@ -42,6 +42,10 @@ public class AuthCookieManager {
 				.findFirst();
 	}
 
+	public boolean hasAccessToken(HttpServletRequest request) {
+		return resolveAccessToken(request).isPresent();
+	}
+
 	private ResponseCookie.ResponseCookieBuilder baseCookie(String value) {
 		ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(properties.accessTokenName(), value)
 				.httpOnly(true)

@@ -8,6 +8,7 @@ import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.shared.security.PasswordHasher;
+import com.flower_details.support.CsrfTestToken;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,9 +80,11 @@ class CategoryIntegrationTests {
 	void adminCanCreateUpdateAndSoftDeleteCategory() throws Exception {
 		String suffix = UUID.randomUUID().toString();
 		Cookie adminCookie = createAdminAndLogin(suffix);
+		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
 
 		MvcResult createResult = mockMvc.perform(post("/api/categories")
-						.cookie(adminCookie)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("""
 								{
@@ -98,7 +101,8 @@ class CategoryIntegrationTests {
 		Long categoryId = readLong(createResult, "$.id");
 
 		mockMvc.perform(put("/api/categories/{id}", categoryId)
-						.cookie(adminCookie)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("""
 								{
@@ -112,7 +116,9 @@ class CategoryIntegrationTests {
 				.andExpect(jsonPath("$.description").value("Detalles florales para aniversarios"))
 				.andExpect(jsonPath("$.active").value(false));
 
-		mockMvc.perform(delete("/api/categories/{id}", categoryId).cookie(adminCookie))
+		mockMvc.perform(delete("/api/categories/{id}", categoryId)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
 				.andExpect(status().isNoContent());
 
 		assertThat(categoryRepository.findById(categoryId)).isEmpty();
@@ -132,6 +138,17 @@ class CategoryIntegrationTests {
 								}
 								"""))
 				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void deletedCategoryTitleCanBeReused() {
+		String title = "Reutilizable " + UUID.randomUUID();
+		Category deleted = categoryRepository.save(Category.create(title, "Categoria original", true));
+		categoryRepository.delete(deleted);
+
+		Category recreated = categoryRepository.save(Category.create(title, "Categoria recreada", true));
+
+		assertThat(recreated.id()).isNotEqualTo(deleted.id());
 	}
 
 	private Cookie createAdminAndLogin(String suffix) throws Exception {

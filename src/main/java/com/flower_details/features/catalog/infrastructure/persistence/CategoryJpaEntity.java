@@ -8,7 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import lombok.AccessLevel;
@@ -23,10 +22,7 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
-@Table(
-		name = "categories",
-		uniqueConstraints = @UniqueConstraint(name = "uk_categories_title", columnNames = "title")
-)
+@Table(name = "categories")
 public class CategoryJpaEntity {
 
 	@Id

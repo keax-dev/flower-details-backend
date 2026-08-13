@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -19,11 +20,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 class SecurityConfig {
 
+	private final AuthCookieManager authCookieManager;
+
+	SecurityConfig(AuthCookieManager authCookieManager) {
+		this.authCookieManager = authCookieManager;
+	}
+
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
 			throws Exception {
 		return http
-				.csrf(AbstractHttpConfigurer::disable)
+				.csrf(csrf -> csrf
+						.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+						.requireCsrfProtectionMatcher(request -> requiresCsrfProtection(request))
+				)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.exceptionHandling(exceptions -> exceptions
 						.authenticationEntryPoint((request, response, authException) -> {
@@ -51,10 +61,24 @@ class SecurityConfig {
 								"/api/auth/login",
 								"/api/auth/logout"
 						).permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.build();
+	}
+
+	private boolean requiresCsrfProtection(jakarta.servlet.http.HttpServletRequest request) {
+		if (HttpMethod.GET.matches(request.getMethod())
+				|| HttpMethod.HEAD.matches(request.getMethod())
+				|| HttpMethod.OPTIONS.matches(request.getMethod())
+				|| HttpMethod.TRACE.matches(request.getMethod())) {
+			return false;
+		}
+
+		String authorization = request.getHeader(org.springframework.http.HttpHeaders.AUTHORIZATION);
+		boolean usesBearerToken = authorization != null && authorization.startsWith("Bearer ");
+		return !usesBearerToken && authCookieManager.hasAccessToken(request);
 	}
 
 	@Bean

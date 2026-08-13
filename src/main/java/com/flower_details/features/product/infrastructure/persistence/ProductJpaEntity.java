@@ -1,6 +1,5 @@
 package com.flower_details.features.product.infrastructure.persistence;
 
-import com.flower_details.features.catalog.infrastructure.persistence.CategoryJpaEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -40,7 +39,7 @@ class ProductJpaEntity {
 			nullable = false,
 			foreignKey = @ForeignKey(name = "fk_products_category")
 	)
-	private CategoryJpaEntity category;
+	private ProductCategoryReferenceJpaEntity category;
 
 	@Column(nullable = false, length = 160)
 	private String title;

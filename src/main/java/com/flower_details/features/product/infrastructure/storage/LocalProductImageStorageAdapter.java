@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -101,6 +102,47 @@ class LocalProductImageStorageAdapter implements ProductImageStoragePort {
 		if (!allowedTypes.contains(contentType.trim().toLowerCase(Locale.ROOT))) {
 			throw new FileStorageException("El tipo de imagen no esta permitido");
 		}
+		validateFileSignature(file, contentType.trim().toLowerCase(Locale.ROOT));
+	}
+
+	private void validateFileSignature(UploadFile file, String contentType) {
+		try (InputStream inputStream = new BufferedInputStream(file.inputStream())) {
+			byte[] header = inputStream.readNBytes(12);
+			if (!hasValidSignature(header, contentType)) {
+				throw new FileStorageException("El contenido del archivo no corresponde a una imagen valida");
+			}
+		}
+		catch (IOException exception) {
+			throw new FileStorageException("No se pudo validar la imagen del producto", exception);
+		}
+	}
+
+	private static boolean hasValidSignature(byte[] header, String contentType) {
+		return switch (contentType) {
+			case "image/png" -> header.length >= 8
+					&& header[0] == (byte) 0x89
+					&& header[1] == 0x50
+					&& header[2] == 0x4E
+					&& header[3] == 0x47
+					&& header[4] == 0x0D
+					&& header[5] == 0x0A
+					&& header[6] == 0x1A
+					&& header[7] == 0x0A;
+			case "image/jpeg" -> header.length >= 3
+					&& header[0] == (byte) 0xFF
+					&& header[1] == (byte) 0xD8
+					&& header[2] == (byte) 0xFF;
+			case "image/webp" -> header.length >= 12
+					&& header[0] == 0x52
+					&& header[1] == 0x49
+					&& header[2] == 0x46
+					&& header[3] == 0x46
+					&& header[8] == 0x57
+					&& header[9] == 0x45
+					&& header[10] == 0x42
+					&& header[11] == 0x50;
+			default -> false;
+		};
 	}
 
 	private static String extensionFor(String contentType) {

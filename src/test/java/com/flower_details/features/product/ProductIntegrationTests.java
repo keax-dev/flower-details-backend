@@ -9,6 +9,7 @@ import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.shared.security.PasswordHasher;
+import com.flower_details.support.CsrfTestToken;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +38,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ProductIntegrationTests {
 
 	private static final String ACCESS_COOKIE_NAME = "flower_details_test_access_token";
-	private static final byte[] FIRST_IMAGE = new byte[] {1, 2, 3, 4};
-	private static final byte[] SECOND_IMAGE = new byte[] {5, 6, 7, 8};
+	private static final byte[] FIRST_IMAGE = new byte[] {
+			(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3, 4
+	};
+	private static final byte[] SECOND_IMAGE = new byte[] {
+			0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x45, 0x42, 0x50
+	};
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -65,6 +70,7 @@ class ProductIntegrationTests {
 	void adminCanCreateUpdateReadAndSoftDeleteProductWithImages() throws Exception {
 		String suffix = UUID.randomUUID().toString();
 		Cookie adminCookie = createAdminAndLogin(suffix);
+		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
 		Category category = categoryRepository.save(Category.create(
 				"Rosas " + suffix,
 				"Arreglos con rosas para ocasiones especiales",
@@ -73,7 +79,8 @@ class ProductIntegrationTests {
 
 		MvcResult createResult = mockMvc.perform(multipart("/api/products")
 						.file(image("images", "ramo.png", FIRST_IMAGE))
-						.cookie(adminCookie)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
 						.param("categoryId", category.id().toString())
 						.param("title", "Ramo premium " + suffix)
 						.param("description", "Ramo floral premium")
@@ -108,7 +115,8 @@ class ProductIntegrationTests {
 
 		MvcResult updateResult = mockMvc.perform(updateRequest
 						.file(image("images", "actualizado.webp", SECOND_IMAGE))
-						.cookie(adminCookie)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
 						.param("categoryId", category.id().toString())
 						.param("title", "Ramo actualizado " + suffix)
 						.param("description", "Ramo floral actualizado")
@@ -127,7 +135,9 @@ class ProductIntegrationTests {
 				.andExpect(status().isOk())
 				.andExpect(result -> assertThat(result.getResponse().getContentAsByteArray()).isEqualTo(SECOND_IMAGE));
 
-		mockMvc.perform(delete("/api/products/{id}", productId).cookie(adminCookie))
+		mockMvc.perform(delete("/api/products/{id}", productId)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
 				.andExpect(status().isNoContent());
 
 		assertThat(productRepository.findById(productId)).isEmpty();
@@ -151,6 +161,40 @@ class ProductIntegrationTests {
 						.param("price", "10.00")
 						.param("active", "true"))
 				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void cookieAuthenticatedUserNeedsCsrfTokenToCreateProduct() throws Exception {
+		String suffix = UUID.randomUUID().toString();
+		Cookie adminCookie = createAdminAndLogin(suffix);
+		Category category = categoryRepository.save(Category.create("CSRF " + suffix, "Categoria de prueba", true));
+
+		mockMvc.perform(multipart("/api/products")
+						.file(image("images", "ramo.png", FIRST_IMAGE))
+						.cookie(adminCookie)
+						.param("categoryId", category.id().toString())
+						.param("title", "Sin CSRF")
+						.param("description", "No debe crearse")
+						.param("price", "10.00"))
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void rejectsFileWhoseContentDoesNotMatchDeclaredImageType() throws Exception {
+		String suffix = UUID.randomUUID().toString();
+		Cookie adminCookie = createAdminAndLogin(suffix);
+		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
+		Category category = categoryRepository.save(Category.create("Imagen invalida " + suffix, "Categoria de prueba", true));
+
+		mockMvc.perform(multipart("/api/products")
+						.file(new MockMultipartFile("images", "falso.png", "image/png", new byte[] {1, 2, 3, 4}))
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
+						.param("categoryId", category.id().toString())
+						.param("title", "Imagen falsa")
+						.param("description", "No debe almacenarse")
+						.param("price", "10.00"))
+				.andExpect(status().isBadRequest());
 	}
 
 	private Cookie createAdminAndLogin(String suffix) throws Exception {

@@ -48,6 +48,7 @@ public class ProductApplicationService implements
 	private final ProductImageRepositoryPort productImageRepository;
 	private final CategoryRepositoryPort categoryRepository;
 	private final ProductImageStoragePort productImageStorage;
+	private final ProductImageFileLifecycle productImageFileLifecycle;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -56,6 +57,7 @@ public class ProductApplicationService implements
 		Map<Long, Category> categoriesById = findCategoriesById(products.stream()
 				.map(Product::categoryId)
 				.toList());
+
 		Map<Long, List<ProductImage>> imagesByProductId = productImageRepository.findActiveByProductIds(products.stream()
 						.map(Product::id)
 						.toList())
@@ -116,8 +118,10 @@ public class ProductApplicationService implements
 
 		List<UploadFile> newImages = normalizeFiles(command.images());
 		if (!newImages.isEmpty()) {
+			List<ProductImage> currentImages = productImageRepository.findActiveByProductId(saved.id());
 			productImageRepository.deleteAllActiveByProductId(saved.id());
 			storeImages(saved.id(), newImages);
+			currentImages.forEach(image -> productImageFileLifecycle.deleteAfterCommit(image.storedFileName()));
 		}
 
 		return ProductView.from(saved, category, productImageRepository.findActiveByProductId(saved.id()));
@@ -129,8 +133,10 @@ public class ProductApplicationService implements
 		Product product = productRepository.findById(id)
 				.orElseThrow(() -> new ProductNotFoundException(id));
 
+		List<ProductImage> images = productImageRepository.findActiveByProductId(id);
 		productImageRepository.deleteAllActiveByProductId(id);
 		productRepository.delete(product);
+		images.forEach(image -> productImageFileLifecycle.deleteAfterCommit(image.storedFileName()));
 	}
 
 	@Override
@@ -159,6 +165,7 @@ public class ProductApplicationService implements
 			for (UploadFile file : files) {
 				StoredFile stored = productImageStorage.store(file);
 				storedFiles.add(stored);
+				productImageFileLifecycle.deleteAfterRollback(stored.storedFileName());
 				images.add(ProductImage.create(
 						productId,
 						stored.url(),

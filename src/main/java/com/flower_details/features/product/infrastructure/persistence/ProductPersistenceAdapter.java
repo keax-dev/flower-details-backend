@@ -1,6 +1,5 @@
 package com.flower_details.features.product.infrastructure.persistence;
 
-import com.flower_details.features.catalog.infrastructure.persistence.CategoryJpaEntity;
 import com.flower_details.features.product.application.port.out.ProductRepositoryPort;
 import com.flower_details.features.product.domain.model.Product;
 import jakarta.persistence.EntityManager;
@@ -19,7 +18,10 @@ class ProductPersistenceAdapter implements ProductRepositoryPort {
 
 	@Override
 	public Product save(Product product) {
-		CategoryJpaEntity category = entityManager.getReference(CategoryJpaEntity.class, product.categoryId());
+		ProductCategoryReferenceJpaEntity category = entityManager.getReference(
+				ProductCategoryReferenceJpaEntity.class,
+				product.categoryId()
+		);
 		ProductJpaEntity saved = repository.save(ProductPersistenceMapper.toEntity(product, category));
 		return ProductPersistenceMapper.toDomain(saved);
 	}

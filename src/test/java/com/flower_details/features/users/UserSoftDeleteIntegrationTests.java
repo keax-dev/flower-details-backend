@@ -6,6 +6,7 @@ import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.shared.security.PasswordHasher;
+import com.flower_details.support.CsrfTestToken;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,8 +73,11 @@ class UserSoftDeleteIntegrationTests {
 		));
 
 		Cookie adminCookie = login(admin.email(), password);
+		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
 
-		mockMvc.perform(delete("/api/users/{id}", operator.id()).cookie(adminCookie))
+		mockMvc.perform(delete("/api/users/{id}", operator.id())
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
 				.andExpect(status().isNoContent());
 
 		assertThat(userRepository.findById(operator.id())).isEmpty();

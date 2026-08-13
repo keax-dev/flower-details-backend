@@ -5,6 +5,7 @@ import com.flower_details.features.auth.application.port.in.LoginUseCase;
 import com.flower_details.features.auth.application.port.in.RegisterCustomerUseCase;
 import com.flower_details.features.auth.infrastructure.security.AuthCookieManager;
 import com.flower_details.features.auth.presentation.dto.AuthResponse;
+import com.flower_details.features.auth.presentation.dto.CsrfTokenResponse;
 import com.flower_details.features.auth.presentation.dto.LoginRequest;
 import com.flower_details.features.auth.presentation.dto.RegisterCustomerRequest;
 import jakarta.validation.Valid;
@@ -13,9 +14,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.csrf.CsrfToken;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,6 +28,11 @@ class AuthController {
 	private final RegisterCustomerUseCase registerCustomerUseCase;
 	private final LoginUseCase loginUseCase;
 	private final AuthCookieManager authCookieManager;
+
+	@GetMapping("/csrf")
+	CsrfTokenResponse csrf(CsrfToken csrfToken) {
+		return CsrfTokenResponse.from(csrfToken);
+	}
 
 	@PostMapping("/register")
 	ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterCustomerRequest request) {
