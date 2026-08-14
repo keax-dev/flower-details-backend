@@ -1,27 +1,21 @@
 package com.flower_details.features.product.application.service;
 
-import com.flower_details.features.product.application.dto.CreateProductCommand;
-import com.flower_details.features.product.application.dto.ProductView;
-import com.flower_details.features.product.application.dto.StoredFile;
-import com.flower_details.features.product.application.dto.StoredFileContent;
-import com.flower_details.features.product.application.dto.UpdateProductCommand;
-import com.flower_details.features.product.application.dto.UploadFile;
+import com.flower_details.features.product.application.dto.command.CreateProductCommand;
+import com.flower_details.features.product.application.dto.command.UpdateProductCommand;
+import com.flower_details.features.product.application.dto.storage.StoredFile;
+import com.flower_details.features.product.application.dto.storage.StoredFileContent;
+import com.flower_details.features.product.application.dto.storage.UploadFile;
+import com.flower_details.features.product.application.dto.view.ProductView;
 import com.flower_details.features.category.application.exception.CategoryNotFoundException;
 import com.flower_details.features.product.application.exception.ProductImageNotFoundException;
 import com.flower_details.features.product.application.exception.ProductNotFoundException;
-import com.flower_details.features.product.application.port.in.CreateProductUseCase;
-import com.flower_details.features.product.application.port.in.DeleteProductUseCase;
-import com.flower_details.features.product.application.port.in.GetProductImageFileUseCase;
-import com.flower_details.features.product.application.port.in.GetProductUseCase;
-import com.flower_details.features.product.application.port.in.ListProductsUseCase;
-import com.flower_details.features.product.application.port.in.UpdateProductUseCase;
 import com.flower_details.features.category.domain.repository.CategoryRepository;
-import com.flower_details.features.product.application.port.out.ProductImageRepositoryPort;
-import com.flower_details.features.product.application.port.out.ProductImageStoragePort;
-import com.flower_details.features.product.application.port.out.ProductRepositoryPort;
 import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.model.ProductImage;
+import com.flower_details.features.product.domain.repository.ProductImageRepository;
+import com.flower_details.features.product.domain.repository.ProductRepository;
+import com.flower_details.features.product.infrastructure.storage.LocalProductImageStorageService;
 import com.flower_details.shared.domain.DomainException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,21 +30,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ProductApplicationService implements
-		ListProductsUseCase,
-		GetProductUseCase,
-		CreateProductUseCase,
-		UpdateProductUseCase,
-		DeleteProductUseCase,
-		GetProductImageFileUseCase {
+public class ProductApplicationService {
 
-	private final ProductRepositoryPort productRepository;
-	private final ProductImageRepositoryPort productImageRepository;
+	private final ProductRepository productRepository;
+	private final ProductImageRepository productImageRepository;
 	private final CategoryRepository categoryRepository;
-	private final ProductImageStoragePort productImageStorage;
+	private final LocalProductImageStorageService productImageStorage;
 	private final ProductImageFileLifecycle productImageFileLifecycle;
 
-	@Override
 	@Transactional(readOnly = true)
 	public List<ProductView> listActiveProducts() {
 		List<Product> products = productRepository.findAllActive();
@@ -73,7 +60,6 @@ public class ProductApplicationService implements
 				.toList();
 	}
 
-	@Override
 	@Transactional(readOnly = true)
 	public ProductView getActiveProduct(Long id) {
 		Product product = productRepository.findActiveById(id)
@@ -81,7 +67,6 @@ public class ProductApplicationService implements
 		return buildView(product);
 	}
 
-	@Override
 	@Transactional
 	public ProductView createProduct(CreateProductCommand command) {
 		Category category = findCategory(command.categoryId());
@@ -100,7 +85,6 @@ public class ProductApplicationService implements
 		return ProductView.from(saved, category, savedImages);
 	}
 
-	@Override
 	@Transactional
 	public ProductView updateProduct(UpdateProductCommand command) {
 		Product product = productRepository.findById(command.id())
@@ -127,7 +111,6 @@ public class ProductApplicationService implements
 		return ProductView.from(saved, category, productImageRepository.findActiveByProductId(saved.id()));
 	}
 
-	@Override
 	@Transactional
 	public void deleteProduct(Long id) {
 		Product product = productRepository.findById(id)
@@ -139,7 +122,6 @@ public class ProductApplicationService implements
 		images.forEach(image -> productImageFileLifecycle.deleteAfterCommit(image.storedFileName()));
 	}
 
-	@Override
 	@Transactional(readOnly = true)
 	public StoredFileContent getProductImageFile(String storedFileName) {
 		ProductImage image = productImageRepository.findActiveByStoredFileName(storedFileName)

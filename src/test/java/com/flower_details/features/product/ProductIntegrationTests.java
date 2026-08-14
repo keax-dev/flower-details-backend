@@ -1,7 +1,7 @@
 package com.flower_details.features.product;
 
 import com.flower_details.features.category.domain.repository.CategoryRepository;
-import com.flower_details.features.product.application.port.out.ProductRepositoryPort;
+import com.flower_details.features.product.domain.repository.ProductRepository;
 import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.users.application.port.out.PersonRepositoryPort;
 import com.flower_details.features.users.application.port.out.UserRepositoryPort;
@@ -51,7 +51,7 @@ class ProductIntegrationTests {
 	private CategoryRepository categoryRepository;
 
 	@Autowired
-	private ProductRepositoryPort productRepository;
+	private ProductRepository productRepository;
 
 	@Autowired
 	private UserRepositoryPort userRepository;

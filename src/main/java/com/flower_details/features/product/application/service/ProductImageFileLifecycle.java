@@ -1,6 +1,6 @@
 package com.flower_details.features.product.application.service;
 
-import com.flower_details.features.product.application.port.out.ProductImageStoragePort;
+import com.flower_details.features.product.infrastructure.storage.LocalProductImageStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @RequiredArgsConstructor
 class ProductImageFileLifecycle {
 
-	private final ProductImageStoragePort productImageStorage;
+	private final LocalProductImageStorageService productImageStorage;
 
 	void deleteAfterCommit(String storedFileName) {
 		register(storedFileName, true);
