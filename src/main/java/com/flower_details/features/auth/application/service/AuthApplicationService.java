@@ -5,7 +5,6 @@ import com.flower_details.features.auth.application.dto.command.RegisterCustomer
 import com.flower_details.features.auth.application.dto.view.AuthResult;
 import com.flower_details.features.auth.application.exception.InvalidCredentialsException;
 import com.flower_details.features.auth.application.exception.UserInactiveException;
-import com.flower_details.features.auth.infrastructure.security.JwtTokenService;
 import com.flower_details.features.users.application.dto.view.UserProfile;
 import com.flower_details.features.users.application.exception.EmailAlreadyRegisteredException;
 import com.flower_details.features.users.application.exception.UserNotFoundException;
@@ -13,7 +12,7 @@ import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.repository.PersonRepository;
 import com.flower_details.features.users.domain.repository.UserRepository;
-import com.flower_details.shared.infrastructure.security.BCryptPasswordService;
+import com.flower_details.shared.domain.security.PasswordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +23,8 @@ public class AuthApplicationService {
 
 	private final UserRepository userRepository;
 	private final PersonRepository personRepository;
-	private final BCryptPasswordService passwordService;
-	private final JwtTokenService jwtTokenService;
+	private final PasswordService passwordService;
+	private final AccessTokenService accessTokenService;
 
 	@Transactional
 	public AuthResult registerCustomer(RegisterCustomerCommand command) {
@@ -66,8 +65,8 @@ public class AuthApplicationService {
 
 	private AuthResult buildAuthResult(User user, Person person) {
 		return AuthResult.bearer(
-				jwtTokenService.generate(user),
-				jwtTokenService.expirationSeconds(),
+				accessTokenService.generate(user),
+				accessTokenService.expirationSeconds(),
 				UserProfile.from(user, person)
 		);
 	}

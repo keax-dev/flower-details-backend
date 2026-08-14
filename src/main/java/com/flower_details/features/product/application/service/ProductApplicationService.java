@@ -15,8 +15,9 @@ import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.model.ProductImage;
 import com.flower_details.features.product.domain.repository.ProductImageRepository;
 import com.flower_details.features.product.domain.repository.ProductRepository;
-import com.flower_details.features.product.infrastructure.storage.LocalProductImageStorageService;
 import com.flower_details.shared.domain.DomainException;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.domain.pagination.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,12 +36,13 @@ public class ProductApplicationService {
 	private final ProductRepository productRepository;
 	private final ProductImageRepository productImageRepository;
 	private final CategoryRepository categoryRepository;
-	private final LocalProductImageStorageService productImageStorage;
+	private final ProductImageStorage productImageStorage;
 	private final ProductImageFileLifecycle productImageFileLifecycle;
 
 	@Transactional(readOnly = true)
-	public List<ProductView> listActiveProducts() {
-		List<Product> products = productRepository.findAllActive();
+	public PageResult<ProductView> listActiveProducts(PageRequest pageRequest) {
+		PageResult<Product> productPage = productRepository.findAllActive(pageRequest);
+		List<Product> products = productPage.items();
 		Map<Long, Category> categoriesById = findCategoriesById(products.stream()
 				.map(Product::categoryId)
 				.toList());
@@ -51,13 +53,13 @@ public class ProductApplicationService {
 				.stream()
 				.collect(Collectors.groupingBy(ProductImage::productId));
 
-		return products.stream()
+		return new PageResult<>(products.stream()
 				.map(product -> ProductView.from(
 						product,
 						findCategoryInMap(product.categoryId(), categoriesById),
 						imagesByProductId.getOrDefault(product.id(), List.of())
 				))
-				.toList();
+				.toList(), productPage.page(), productPage.size(), productPage.totalElements(), productPage.totalPages());
 	}
 
 	@Transactional(readOnly = true)

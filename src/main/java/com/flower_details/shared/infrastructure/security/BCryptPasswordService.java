@@ -1,12 +1,13 @@
 package com.flower_details.shared.infrastructure.security;
 
+import com.flower_details.shared.domain.security.PasswordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class BCryptPasswordService {
+public class BCryptPasswordService implements PasswordService {
 
 	private final PasswordEncoder passwordEncoder;
 

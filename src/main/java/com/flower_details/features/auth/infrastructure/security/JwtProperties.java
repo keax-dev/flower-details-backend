@@ -12,7 +12,13 @@ public record JwtProperties(
 		String secret,
 
 		@Value("${security.jwt.expiration-minutes:1440}")
-		long expirationMinutes
+		long expirationMinutes,
+
+		@Value("${security.jwt.issuer:flower-details-api}")
+		String issuer,
+
+		@Value("${security.jwt.audience:flower-details-web}")
+		String audience
 ) {
 
 	public JwtProperties {
@@ -21,6 +27,9 @@ public record JwtProperties(
 		}
 		if (expirationMinutes <= 0) {
 			throw new IllegalArgumentException("security.jwt.expiration-minutes debe ser mayor a cero");
+		}
+		if (issuer == null || issuer.isBlank() || audience == null || audience.isBlank()) {
+			throw new IllegalArgumentException("security.jwt.issuer y security.jwt.audience son obligatorios");
 		}
 	}
 

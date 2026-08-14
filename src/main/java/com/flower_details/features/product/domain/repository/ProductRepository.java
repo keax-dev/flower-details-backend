@@ -1,6 +1,8 @@
 package com.flower_details.features.product.domain.repository;
 
 import com.flower_details.features.product.domain.model.Product;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.domain.pagination.PageResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,5 +17,5 @@ public interface ProductRepository {
 
 	Optional<Product> findActiveById(Long id);
 
-	List<Product> findAllActive();
+	PageResult<Product> findAllActive(PageRequest pageRequest);
 }

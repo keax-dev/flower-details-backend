@@ -4,6 +4,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -21,15 +24,22 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 class SecurityConfig {
 
 	private final AuthCookieManager authCookieManager;
+	private final CorsProperties corsProperties;
 
-	SecurityConfig(AuthCookieManager authCookieManager) {
+	SecurityConfig(AuthCookieManager authCookieManager, CorsProperties corsProperties) {
 		this.authCookieManager = authCookieManager;
+		this.corsProperties = corsProperties;
 	}
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
+	SecurityFilterChain securityFilterChain(
+			HttpSecurity http,
+			JwtAuthenticationFilter jwtAuthenticationFilter,
+			AuthenticationRateLimitFilter authenticationRateLimitFilter
+	)
 			throws Exception {
 		return http
+				.cors(cors -> {})
 				.csrf(csrf -> csrf
 						.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
 						.requireCsrfProtectionMatcher(request -> requiresCsrfProtection(request))
@@ -64,8 +74,23 @@ class SecurityConfig {
 						.requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
 						.anyRequest().authenticated()
 				)
+				.addFilterBefore(authenticationRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.build();
+	}
+
+	@Bean
+	CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOrigins(corsProperties.origins());
+		configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+		configuration.setAllowedHeaders(java.util.List.of("Content-Type", "X-XSRF-TOKEN", "Authorization"));
+		configuration.setAllowCredentials(true);
+		configuration.setMaxAge(3600L);
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
 	}
 
 	private boolean requiresCsrfProtection(jakarta.servlet.http.HttpServletRequest request) {
@@ -91,6 +116,15 @@ class SecurityConfig {
 			JwtAuthenticationFilter jwtAuthenticationFilter
 	) {
 		FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(jwtAuthenticationFilter);
+		registration.setEnabled(false);
+		return registration;
+	}
+
+	@Bean
+	FilterRegistrationBean<AuthenticationRateLimitFilter> authenticationRateLimitFilterRegistration(
+			AuthenticationRateLimitFilter authenticationRateLimitFilter
+	) {
+		FilterRegistrationBean<AuthenticationRateLimitFilter> registration = new FilterRegistrationBean<>(authenticationRateLimitFilter);
 		registration.setEnabled(false);
 		return registration;
 	}

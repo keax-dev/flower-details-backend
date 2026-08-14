@@ -1,6 +1,8 @@
 package com.flower_details.features.users.domain.repository;
 
 import com.flower_details.features.users.domain.model.User;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.domain.pagination.PageResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,5 +19,5 @@ public interface UserRepository {
 
 	boolean existsByEmail(String email);
 
-	List<User> findAll();
+	PageResult<User> findAll(PageRequest pageRequest);
 }

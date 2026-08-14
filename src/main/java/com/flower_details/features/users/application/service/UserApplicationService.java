@@ -10,7 +10,9 @@ import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.features.users.domain.repository.PersonRepository;
 import com.flower_details.features.users.domain.repository.UserRepository;
 import com.flower_details.shared.domain.DomainException;
-import com.flower_details.shared.infrastructure.security.BCryptPasswordService;
+import com.flower_details.shared.domain.security.PasswordService;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.domain.pagination.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +29,7 @@ public class UserApplicationService {
 
 	private final UserRepository userRepository;
 	private final PersonRepository personRepository;
-	private final BCryptPasswordService passwordService;
+	private final PasswordService passwordService;
 
 	@Transactional
 	public UserProfile createOperator(CreateOperatorCommand command) {
@@ -59,17 +61,18 @@ public class UserApplicationService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<UserProfile> listUsers() {
-		List<User> users = userRepository.findAll();
+	public PageResult<UserProfile> listUsers(PageRequest pageRequest) {
+		PageResult<User> userPage = userRepository.findAll(pageRequest);
+		List<User> users = userPage.items();
 		Map<Long, Person> peopleByUserId = personRepository.findByUserIds(users.stream()
 						.map(User::id)
 						.toList())
 				.stream()
 				.collect(Collectors.toMap(Person::userId, Function.identity()));
 
-		return users.stream()
+		return new PageResult<>(users.stream()
 				.map(user -> UserProfile.from(user, findPersonInMap(user, peopleByUserId)))
-				.toList();
+				.toList(), userPage.page(), userPage.size(), userPage.totalElements(), userPage.totalPages());
 	}
 
 	@Transactional

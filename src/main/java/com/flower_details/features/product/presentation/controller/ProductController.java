@@ -6,9 +6,13 @@ import com.flower_details.features.product.application.dto.storage.UploadFile;
 import com.flower_details.features.product.application.service.ProductApplicationService;
 import com.flower_details.features.product.presentation.dto.response.ProductResponse;
 import com.flower_details.features.product.presentation.upload.MultipartUploadFile;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.presentation.PageResponse;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -38,11 +42,14 @@ class ProductController {
 	private final ProductApplicationService productApplicationService;
 
 	@GetMapping
-	List<ProductResponse> listProducts() {
-		return productApplicationService.listActiveProducts()
-				.stream()
-				.map(ProductResponse::from)
-				.toList();
+	PageResponse<ProductResponse> listProducts(
+			@RequestParam(defaultValue = "0") @PositiveOrZero(message = "La pagina no puede ser negativa") int page,
+			@RequestParam(defaultValue = "20") @Positive @Max(value = 100, message = "El tamano maximo es 100") int size
+	) {
+		return PageResponse.from(
+				productApplicationService.listActiveProducts(new PageRequest(page, size)),
+				ProductResponse::from
+		);
 	}
 
 	@GetMapping("/{id}")

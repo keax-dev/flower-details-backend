@@ -4,12 +4,15 @@ import com.flower_details.features.product.application.dto.storage.StoredFile;
 import com.flower_details.features.product.application.dto.storage.StoredFileContent;
 import com.flower_details.features.product.application.dto.storage.UploadFile;
 import com.flower_details.features.product.application.exception.FileStorageException;
+import com.flower_details.features.product.application.service.ProductImageStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.BufferedInputStream;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -19,7 +22,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class LocalProductImageStorageService {
+public class LocalProductImageStorageService implements ProductImageStorage {
 
 	private final ProductImageStorageProperties properties;
 
@@ -99,6 +102,7 @@ public class LocalProductImageStorageService {
 			throw new FileStorageException("El tipo de imagen no esta permitido");
 		}
 		validateFileSignature(file, contentType.trim().toLowerCase(Locale.ROOT));
+		validateDecodedImage(file);
 	}
 
 	private void validateFileSignature(UploadFile file, String contentType) {
@@ -139,6 +143,22 @@ public class LocalProductImageStorageService {
 					&& header[11] == 0x50;
 			default -> false;
 		};
+	}
+
+	private void validateDecodedImage(UploadFile file) {
+		try (InputStream inputStream = file.inputStream()) {
+			BufferedImage image = ImageIO.read(inputStream);
+			if (image == null || image.getWidth() < 1 || image.getHeight() < 1) {
+				throw new FileStorageException("El archivo no contiene una imagen valida");
+			}
+			long pixels = Math.multiplyExact((long) image.getWidth(), image.getHeight());
+			if (pixels > properties.maxPixels()) {
+				throw new FileStorageException("La imagen supera el limite de pixeles permitido");
+			}
+		}
+		catch (IOException | ArithmeticException exception) {
+			throw new FileStorageException("No se pudo decodificar la imagen del producto", exception);
+		}
 	}
 
 	private static String extensionFor(String contentType) {

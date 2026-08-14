@@ -5,6 +5,10 @@ import com.flower_details.features.category.domain.repository.CategoryRepository
 import com.flower_details.features.category.infrastructure.persistence.entity.CategoryJpaEntity;
 import com.flower_details.features.category.infrastructure.persistence.mapper.CategoryPersistenceMapper;
 import lombok.RequiredArgsConstructor;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.domain.pagination.PageResult;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -56,11 +60,16 @@ class JpaCategoryRepository implements CategoryRepository {
 	}
 
 	@Override
-	public List<Category> findAllActive() {
-		return repository.findAllByActiveTrueOrderByTitleAsc()
-				.stream()
-				.map(CategoryPersistenceMapper::toDomain)
-				.toList();
+	public PageResult<Category> findAllActive(PageRequest pageRequest) {
+		Page<CategoryJpaEntity> page = repository.findAllByActiveTrue(
+				org.springframework.data.domain.PageRequest.of(
+						pageRequest.page(), pageRequest.size(), Sort.by(Sort.Direction.ASC, "title")
+				)
+		);
+		return new PageResult<>(
+				page.getContent().stream().map(CategoryPersistenceMapper::toDomain).toList(),
+				page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages()
+		);
 	}
 
 	private static String normalizeTitle(String title) {

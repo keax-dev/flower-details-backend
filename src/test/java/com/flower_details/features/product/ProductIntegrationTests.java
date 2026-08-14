@@ -23,6 +23,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 import java.util.UUID;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -37,12 +41,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ProductIntegrationTests {
 
 	private static final String ACCESS_COOKIE_NAME = "flower_details_test_access_token";
-	private static final byte[] FIRST_IMAGE = new byte[] {
-			(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 1, 2, 3, 4
-	};
-	private static final byte[] SECOND_IMAGE = new byte[] {
-			0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x45, 0x42, 0x50
-	};
+	private static final byte[] FIRST_IMAGE = pngImage();
+	private static final byte[] SECOND_IMAGE = FIRST_IMAGE;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -96,7 +96,7 @@ class ProductIntegrationTests {
 
 		mockMvc.perform(get("/api/products"))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$[0].id").value(productId));
+				.andExpect(jsonPath("$.items[0].id").value(productId));
 
 		mockMvc.perform(get("/api/products/{id}", productId))
 				.andExpect(status().isOk())
@@ -113,7 +113,7 @@ class ProductIntegrationTests {
 		});
 
 		MvcResult updateResult = mockMvc.perform(updateRequest
-						.file(image("images", "actualizado.webp", SECOND_IMAGE))
+						.file(image("images", "actualizado.png", SECOND_IMAGE))
 						.cookie(adminCookie, csrfToken.cookie())
 						.header(csrfToken.headerName(), csrfToken.token())
 						.param("categoryId", category.id().toString())
@@ -123,7 +123,7 @@ class ProductIntegrationTests {
 						.param("active", "true"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.title").value("Ramo actualizado " + suffix))
-				.andExpect(jsonPath("$.images[0].contentType").value("image/webp"))
+				.andExpect(jsonPath("$.images[0].contentType").value("image/png"))
 				.andReturn();
 
 		String secondImageUrl = readString(updateResult, "$.images[0].url");
@@ -226,8 +226,20 @@ class ProductIntegrationTests {
 	}
 
 	private MockMultipartFile image(String parameterName, String fileName, byte[] content) {
-		String contentType = fileName.endsWith(".webp") ? "image/webp" : "image/png";
-		return new MockMultipartFile(parameterName, fileName, contentType, content);
+		return new MockMultipartFile(parameterName, fileName, "image/png", content);
+	}
+
+	private static byte[] pngImage() {
+		try {
+			BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+			image.setRGB(0, 0, 0xFFFF66AA);
+			ByteArrayOutputStream output = new ByteArrayOutputStream();
+			ImageIO.write(image, "png", output);
+			return output.toByteArray();
+		}
+		catch (IOException exception) {
+			throw new IllegalStateException("No se pudo crear la imagen de prueba", exception);
+		}
 	}
 
 	private Long countProductRowsById(Long id) {

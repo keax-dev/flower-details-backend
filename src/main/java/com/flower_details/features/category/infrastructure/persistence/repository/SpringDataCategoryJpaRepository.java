@@ -2,6 +2,8 @@ package com.flower_details.features.category.infrastructure.persistence.reposito
 
 import com.flower_details.features.category.infrastructure.persistence.entity.CategoryJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Collection;
 import java.util.List;
@@ -17,5 +19,5 @@ interface SpringDataCategoryJpaRepository extends JpaRepository<CategoryJpaEntit
 
 	List<CategoryJpaEntity> findByIdIn(Collection<Long> ids);
 
-	List<CategoryJpaEntity> findAllByActiveTrueOrderByTitleAsc();
+	Page<CategoryJpaEntity> findAllByActiveTrue(Pageable pageable);
 }

@@ -5,6 +5,10 @@ import com.flower_details.features.users.domain.repository.UserRepository;
 import com.flower_details.features.users.infrastructure.persistence.entity.UserJpaEntity;
 import com.flower_details.features.users.infrastructure.persistence.mapper.UserPersistenceMapper;
 import lombok.RequiredArgsConstructor;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.domain.pagination.PageResult;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -44,11 +48,16 @@ class JpaUserRepository implements UserRepository {
 	}
 
 	@Override
-	public List<User> findAll() {
-		return repository.findAllByOrderByCreatedAtDesc()
-				.stream()
-				.map(UserPersistenceMapper::toDomain)
-				.toList();
+	public PageResult<User> findAll(PageRequest pageRequest) {
+		Page<UserJpaEntity> page = repository.findAll(
+				org.springframework.data.domain.PageRequest.of(
+						pageRequest.page(), pageRequest.size(), Sort.by(Sort.Direction.DESC, "createdAt")
+				)
+		);
+		return new PageResult<>(
+				page.getContent().stream().map(UserPersistenceMapper::toDomain).toList(),
+				page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages()
+		);
 	}
 
 	private static String normalizeEmail(String email) {

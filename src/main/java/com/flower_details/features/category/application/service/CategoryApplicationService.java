@@ -7,6 +7,8 @@ import com.flower_details.features.category.application.exception.CategoryNotFou
 import com.flower_details.features.category.application.exception.CategoryTitleAlreadyExistsException;
 import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.category.domain.repository.CategoryRepository;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.domain.pagination.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +22,8 @@ public class CategoryApplicationService {
 	private final CategoryRepository categoryRepository;
 
 	@Transactional(readOnly = true)
-	public List<CategoryView> listActiveCategories() {
-		return categoryRepository.findAllActive()
-				.stream()
-				.map(CategoryView::from)
-				.toList();
+	public PageResult<CategoryView> listActiveCategories(PageRequest pageRequest) {
+		return categoryRepository.findAllActive(pageRequest).map(CategoryView::from);
 	}
 
 	@Transactional

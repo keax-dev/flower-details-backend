@@ -7,6 +7,10 @@ import com.flower_details.features.product.infrastructure.persistence.entity.Pro
 import com.flower_details.features.product.infrastructure.persistence.mapper.ProductPersistenceMapper;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.domain.pagination.PageResult;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -45,10 +49,15 @@ class JpaProductRepository implements ProductRepository {
 	}
 
 	@Override
-	public List<Product> findAllActive() {
-		return repository.findAllByActiveTrueAndCategory_ActiveTrueOrderByCreatedAtDesc()
-				.stream()
-				.map(ProductPersistenceMapper::toDomain)
-				.toList();
+	public PageResult<Product> findAllActive(PageRequest pageRequest) {
+		Page<ProductJpaEntity> page = repository.findAllByActiveTrueAndCategory_ActiveTrue(
+				org.springframework.data.domain.PageRequest.of(
+						pageRequest.page(), pageRequest.size(), Sort.by(Sort.Direction.DESC, "createdAt")
+				)
+		);
+		return new PageResult<>(
+				page.getContent().stream().map(ProductPersistenceMapper::toDomain).toList(),
+				page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages()
+		);
 	}
 }

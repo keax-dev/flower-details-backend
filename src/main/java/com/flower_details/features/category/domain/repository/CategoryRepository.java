@@ -1,6 +1,8 @@
 package com.flower_details.features.category.domain.repository;
 
 import com.flower_details.features.category.domain.model.Category;
+import com.flower_details.shared.domain.pagination.PageRequest;
+import com.flower_details.shared.domain.pagination.PageResult;
 
 import java.util.Collection;
 import java.util.List;
@@ -20,5 +22,5 @@ public interface CategoryRepository {
 
 	boolean existsByTitleForAnotherCategory(String title, Long categoryId);
 
-	List<Category> findAllActive();
+	PageResult<Category> findAllActive(PageRequest pageRequest);
 }

@@ -20,13 +20,16 @@ record ProductImageStorageProperties(
 		@Value("${app.storage.products.max-size-bytes:5242880}")
 		long maxSizeBytes,
 
+		@Value("${app.storage.products.max-pixels:25000000}")
+		long maxPixels,
+
 		@Value("${app.storage.products.allowed-content-types:image/jpeg,image/png,image/webp}")
 		String allowedContentTypes
 ) {
 
 	ProductImageStorageProperties {
-		if (maxSizeBytes <= 0) {
-			throw new FileStorageException("app.storage.products.max-size-bytes debe ser mayor a cero");
+		if (maxSizeBytes <= 0 || maxPixels <= 0) {
+			throw new FileStorageException("Los limites de imagen deben ser mayores a cero");
 		}
 	}
 

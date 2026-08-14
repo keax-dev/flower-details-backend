@@ -2,6 +2,7 @@ package com.flower_details.features.auth.infrastructure.security;
 
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
+import com.flower_details.features.auth.application.service.AccessTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
@@ -20,7 +21,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class JwtTokenService {
+public class JwtTokenService implements AccessTokenService {
 
 	private static final String HMAC_ALGORITHM = "HmacSHA256";
 	private static final TypeReference<Map<String, Object>> CLAIMS_TYPE = new TypeReference<>() {
@@ -41,6 +42,8 @@ public class JwtTokenService {
 		payload.put("sub", user.email());
 		payload.put("userId", user.id());
 		payload.put("role", user.role().name());
+		payload.put("iss", properties.issuer());
+		payload.put("aud", properties.audience());
 		payload.put("iat", now.getEpochSecond());
 		payload.put("exp", expiresAt.getEpochSecond());
 
@@ -61,7 +64,9 @@ public class JwtTokenService {
 			);
 
 			long expiration = getLong(claims, "exp");
-			if (expiration <= Instant.now().getEpochSecond()) {
+			if (expiration <= Instant.now().getEpochSecond()
+					|| !properties.issuer().equals(getString(claims, "iss"))
+					|| !properties.audience().equals(getString(claims, "aud"))) {
 				return Optional.empty();
 			}
 
