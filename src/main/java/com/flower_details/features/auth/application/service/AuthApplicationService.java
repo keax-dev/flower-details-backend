@@ -1,35 +1,32 @@
 package com.flower_details.features.auth.application.service;
 
-import com.flower_details.features.auth.application.dto.AuthResult;
-import com.flower_details.features.auth.application.dto.LoginCommand;
-import com.flower_details.features.auth.application.dto.RegisterCustomerCommand;
+import com.flower_details.features.auth.application.dto.command.LoginCommand;
+import com.flower_details.features.auth.application.dto.command.RegisterCustomerCommand;
+import com.flower_details.features.auth.application.dto.view.AuthResult;
 import com.flower_details.features.auth.application.exception.InvalidCredentialsException;
 import com.flower_details.features.auth.application.exception.UserInactiveException;
-import com.flower_details.features.auth.application.port.in.LoginUseCase;
-import com.flower_details.features.auth.application.port.in.RegisterCustomerUseCase;
-import com.flower_details.features.auth.application.port.out.TokenProviderPort;
-import com.flower_details.features.users.application.dto.UserProfile;
+import com.flower_details.features.auth.infrastructure.security.JwtTokenService;
+import com.flower_details.features.users.application.dto.view.UserProfile;
 import com.flower_details.features.users.application.exception.EmailAlreadyRegisteredException;
 import com.flower_details.features.users.application.exception.UserNotFoundException;
-import com.flower_details.features.users.application.port.out.PersonRepositoryPort;
-import com.flower_details.features.users.application.port.out.UserRepositoryPort;
 import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
-import com.flower_details.shared.security.PasswordHasher;
+import com.flower_details.features.users.domain.repository.PersonRepository;
+import com.flower_details.features.users.domain.repository.UserRepository;
+import com.flower_details.shared.infrastructure.security.BCryptPasswordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class AuthApplicationService implements RegisterCustomerUseCase, LoginUseCase {
+public class AuthApplicationService {
 
-	private final UserRepositoryPort userRepository;
-	private final PersonRepositoryPort personRepository;
-	private final PasswordHasher passwordHasher;
-	private final TokenProviderPort tokenProvider;
+	private final UserRepository userRepository;
+	private final PersonRepository personRepository;
+	private final BCryptPasswordService passwordService;
+	private final JwtTokenService jwtTokenService;
 
-	@Override
 	@Transactional
 	public AuthResult registerCustomer(RegisterCustomerCommand command) {
 		if (userRepository.existsByEmail(command.email())) {
@@ -38,7 +35,7 @@ public class AuthApplicationService implements RegisterCustomerUseCase, LoginUse
 
 		User customer = userRepository.save(User.registerCustomer(
 				command.email(),
-				passwordHasher.hash(command.password())
+				passwordService.hash(command.password())
 		));
 		Person person = personRepository.save(Person.create(
 				customer.id(),
@@ -51,13 +48,12 @@ public class AuthApplicationService implements RegisterCustomerUseCase, LoginUse
 		return buildAuthResult(customer, person);
 	}
 
-	@Override
 	@Transactional(readOnly = true)
 	public AuthResult login(LoginCommand command) {
 		User user = userRepository.findByEmail(command.email())
 				.orElseThrow(InvalidCredentialsException::new);
 
-		if (!passwordHasher.matches(command.password(), user.passwordHash())) {
+		if (!passwordService.matches(command.password(), user.passwordHash())) {
 			throw new InvalidCredentialsException();
 		}
 
@@ -70,8 +66,8 @@ public class AuthApplicationService implements RegisterCustomerUseCase, LoginUse
 
 	private AuthResult buildAuthResult(User user, Person person) {
 		return AuthResult.bearer(
-				tokenProvider.generate(user),
-				tokenProvider.expirationSeconds(),
+				jwtTokenService.generate(user),
+				jwtTokenService.expirationSeconds(),
 				UserProfile.from(user, person)
 		);
 	}

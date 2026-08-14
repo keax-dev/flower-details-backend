@@ -1,11 +1,11 @@
 package com.flower_details.features.users;
 
-import com.flower_details.features.users.application.port.out.UserRepositoryPort;
-import com.flower_details.features.users.application.port.out.PersonRepositoryPort;
+import com.flower_details.features.users.domain.repository.PersonRepository;
+import com.flower_details.features.users.domain.repository.UserRepository;
 import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
-import com.flower_details.shared.security.PasswordHasher;
+import com.flower_details.shared.infrastructure.security.BCryptPasswordService;
 import com.flower_details.support.CsrfTestToken;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
@@ -34,13 +34,13 @@ class UserSoftDeleteIntegrationTests {
 	private MockMvc mockMvc;
 
 	@Autowired
-	private UserRepositoryPort userRepository;
+	private UserRepository userRepository;
 
 	@Autowired
-	private PersonRepositoryPort personRepository;
+	private PersonRepository personRepository;
 
 	@Autowired
-	private PasswordHasher passwordHasher;
+	private BCryptPasswordService passwordService;
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -54,14 +54,14 @@ class UserSoftDeleteIntegrationTests {
 
 		User admin = userRepository.save(User.createStaff(
 				adminEmail,
-				passwordHasher.hash(password),
+				passwordService.hash(password),
 				UserRole.ADMIN
 		));
 		personRepository.save(Person.create(admin.id(), "Admin", "Demo", null, null));
 
 		User operator = userRepository.save(User.createStaff(
 				operatorEmail,
-				passwordHasher.hash(password),
+				passwordService.hash(password),
 				UserRole.OPERATOR
 		));
 		personRepository.save(Person.create(

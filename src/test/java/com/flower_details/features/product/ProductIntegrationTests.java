@@ -3,12 +3,12 @@ package com.flower_details.features.product;
 import com.flower_details.features.category.domain.repository.CategoryRepository;
 import com.flower_details.features.product.domain.repository.ProductRepository;
 import com.flower_details.features.category.domain.model.Category;
-import com.flower_details.features.users.application.port.out.PersonRepositoryPort;
-import com.flower_details.features.users.application.port.out.UserRepositoryPort;
+import com.flower_details.features.users.domain.repository.PersonRepository;
+import com.flower_details.features.users.domain.repository.UserRepository;
 import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
-import com.flower_details.shared.security.PasswordHasher;
+import com.flower_details.shared.infrastructure.security.BCryptPasswordService;
 import com.flower_details.support.CsrfTestToken;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
@@ -54,13 +54,13 @@ class ProductIntegrationTests {
 	private ProductRepository productRepository;
 
 	@Autowired
-	private UserRepositoryPort userRepository;
+	private UserRepository userRepository;
 
 	@Autowired
-	private PersonRepositoryPort personRepository;
+	private PersonRepository personRepository;
 
 	@Autowired
-	private PasswordHasher passwordHasher;
+	private BCryptPasswordService passwordService;
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -201,7 +201,7 @@ class ProductIntegrationTests {
 		String password = "Password123";
 		User admin = userRepository.save(User.createStaff(
 				email,
-				passwordHasher.hash(password),
+				passwordService.hash(password),
 				UserRole.ADMIN
 		));
 		personRepository.save(Person.create(admin.id(), "Admin", "Productos", null, null));

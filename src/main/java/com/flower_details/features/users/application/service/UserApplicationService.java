@@ -1,20 +1,16 @@
 package com.flower_details.features.users.application.service;
 
-import com.flower_details.features.users.application.dto.CreateOperatorCommand;
-import com.flower_details.features.users.application.dto.UserProfile;
+import com.flower_details.features.users.application.dto.command.CreateOperatorCommand;
+import com.flower_details.features.users.application.dto.view.UserProfile;
 import com.flower_details.features.users.application.exception.EmailAlreadyRegisteredException;
 import com.flower_details.features.users.application.exception.UserNotFoundException;
-import com.flower_details.features.users.application.port.in.CreateOperatorUseCase;
-import com.flower_details.features.users.application.port.in.DeleteUserUseCase;
-import com.flower_details.features.users.application.port.in.GetUserProfileUseCase;
-import com.flower_details.features.users.application.port.in.ListUsersUseCase;
-import com.flower_details.features.users.application.port.out.PersonRepositoryPort;
-import com.flower_details.features.users.application.port.out.UserRepositoryPort;
 import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.model.UserRole;
+import com.flower_details.features.users.domain.repository.PersonRepository;
+import com.flower_details.features.users.domain.repository.UserRepository;
 import com.flower_details.shared.domain.DomainException;
-import com.flower_details.shared.security.PasswordHasher;
+import com.flower_details.shared.infrastructure.security.BCryptPasswordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,17 +23,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class UserApplicationService implements
-		CreateOperatorUseCase,
-		DeleteUserUseCase,
-		GetUserProfileUseCase,
-		ListUsersUseCase {
+public class UserApplicationService {
 
-	private final UserRepositoryPort userRepository;
-	private final PersonRepositoryPort personRepository;
-	private final PasswordHasher passwordHasher;
+	private final UserRepository userRepository;
+	private final PersonRepository personRepository;
+	private final BCryptPasswordService passwordService;
 
-	@Override
 	@Transactional
 	public UserProfile createOperator(CreateOperatorCommand command) {
 		if (userRepository.existsByEmail(command.email())) {
@@ -46,7 +37,7 @@ public class UserApplicationService implements
 
 		User operator = userRepository.save(User.createStaff(
 				command.email(),
-				passwordHasher.hash(command.password()),
+				passwordService.hash(command.password()),
 				UserRole.OPERATOR
 		));
 		Person person = personRepository.save(Person.create(
@@ -60,7 +51,6 @@ public class UserApplicationService implements
 		return UserProfile.from(operator, person);
 	}
 
-	@Override
 	@Transactional(readOnly = true)
 	public UserProfile getById(Long id) {
 		User user = userRepository.findById(id)
@@ -68,7 +58,6 @@ public class UserApplicationService implements
 		return UserProfile.from(user, findPersonByUserId(id));
 	}
 
-	@Override
 	@Transactional(readOnly = true)
 	public List<UserProfile> listUsers() {
 		List<User> users = userRepository.findAll();
@@ -83,7 +72,6 @@ public class UserApplicationService implements
 				.toList();
 	}
 
-	@Override
 	@Transactional
 	public void deleteUser(Long userId, Long requestedByUserId) {
 		if (Objects.equals(userId, requestedByUserId)) {

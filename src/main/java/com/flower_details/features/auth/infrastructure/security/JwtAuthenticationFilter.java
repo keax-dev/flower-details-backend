@@ -1,8 +1,7 @@
 package com.flower_details.features.auth.infrastructure.security;
 
-import com.flower_details.features.auth.application.port.out.TokenProviderPort;
-import com.flower_details.features.users.application.port.out.UserRepositoryPort;
 import com.flower_details.features.users.domain.model.User;
+import com.flower_details.features.users.domain.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,8 +23,8 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private static final String BEARER_PREFIX = "Bearer ";
 
-	private final TokenProviderPort tokenProvider;
-	private final UserRepositoryPort userRepository;
+	private final JwtTokenService jwtTokenService;
+	private final UserRepository userRepository;
 	private final AuthCookieManager authCookieManager;
 
 	@Override
@@ -50,7 +49,7 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
 	}
 
 	private void authenticate(String token, HttpServletRequest request) {
-		tokenProvider.validate(token)
+		jwtTokenService.validate(token)
 				.flatMap(claims -> userRepository.findById(claims.userId()))
 				.filter(User::active)
 				.ifPresent(user -> {
