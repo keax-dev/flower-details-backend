@@ -12,7 +12,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 
@@ -46,9 +46,9 @@ class CategoryController {
 
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
-	ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CreateCategoryRequest request) {
-		CategoryResponse response = CategoryResponse.from(categoryApplicationService.createCategory(request.toCommand()));
-		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	@ResponseStatus(HttpStatus.CREATED)
+	CategoryResponse createCategory(@Valid @RequestBody CreateCategoryRequest request) {
+		return CategoryResponse.from(categoryApplicationService.createCategory(request.toCommand()));
 	}
 
 	@PutMapping("/{id}")
@@ -62,8 +62,8 @@ class CategoryController {
 
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
-	ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void deleteCategory(@PathVariable Long id) {
 		categoryApplicationService.deleteCategory(id);
-		return ResponseEntity.noContent().build();
 	}
 }

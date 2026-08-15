@@ -17,7 +17,6 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +27,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -59,7 +59,8 @@ class ProductController {
 
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@PreAuthorize("hasRole('ADMIN')")
-	ResponseEntity<ProductResponse> createProduct(
+	@ResponseStatus(HttpStatus.CREATED)
+	ProductResponse createProduct(
 			@RequestParam @NotNull(message = "La categoria es obligatoria") Long categoryId,
 			@RequestParam @NotBlank(message = "El titulo es obligatorio")
 			@Size(max = 160, message = "El titulo no puede superar 160 caracteres") String title,
@@ -70,7 +71,7 @@ class ProductController {
 			@RequestParam(defaultValue = "true") boolean active,
 			@RequestParam(name = "images", required = false) List<MultipartFile> images
 	) {
-		ProductResponse response = ProductResponse.from(productApplicationService.createProduct(new CreateProductCommand(
+		return ProductResponse.from(productApplicationService.createProduct(new CreateProductCommand(
 				categoryId,
 				title,
 				description,
@@ -78,7 +79,6 @@ class ProductController {
 				active,
 				toUploadFiles(images)
 		)));
-		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	@PutMapping(path = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -108,9 +108,9 @@ class ProductController {
 
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
-	ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void deleteProduct(@PathVariable Long id) {
 		productApplicationService.deleteProduct(id);
-		return ResponseEntity.noContent().build();
 	}
 
 	private static List<UploadFile> toUploadFiles(List<MultipartFile> files) {

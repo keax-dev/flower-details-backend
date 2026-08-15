@@ -12,7 +12,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.List;
 
@@ -50,18 +50,18 @@ class UserController {
 
 	@PostMapping("/api/users/operators")
 	@PreAuthorize("hasRole('ADMIN')")
-	ResponseEntity<UserResponse> createOperator(@Valid @RequestBody CreateOperatorRequest request) {
-		UserResponse response = UserResponse.from(userApplicationService.createOperator(request.toCommand()));
-		return ResponseEntity.status(HttpStatus.CREATED).body(response);
+	@ResponseStatus(HttpStatus.CREATED)
+	UserResponse createOperator(@Valid @RequestBody CreateOperatorRequest request) {
+		return UserResponse.from(userApplicationService.createOperator(request.toCommand()));
 	}
 
 	@DeleteMapping("/api/users/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
-	ResponseEntity<Void> deleteUser(
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void deleteUser(
 			@PathVariable Long id,
 			@AuthenticationPrincipal AuthenticatedUserPrincipal principal
 	) {
 		userApplicationService.deleteUser(id, principal.id());
-		return ResponseEntity.noContent().build();
 	}
 }
