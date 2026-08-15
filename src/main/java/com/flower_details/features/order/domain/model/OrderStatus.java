@@ -1,0 +1,11 @@
+package com.flower_details.features.order.domain.model;
+
+public enum OrderStatus {
+	GENERATED,
+	ASSIGNED,
+	IN_PREPARATION,
+	READY_FOR_DELIVERY,
+	ON_THE_WAY,
+	DELIVERED,
+	CANCELLED
+}

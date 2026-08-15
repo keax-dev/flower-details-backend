@@ -10,6 +10,7 @@ import com.flower_details.features.cart.application.exception.CartProductUnavail
 import com.flower_details.features.product.application.exception.FileStorageException;
 import com.flower_details.features.product.application.exception.ProductImageNotFoundException;
 import com.flower_details.features.product.application.exception.ProductNotFoundException;
+import com.flower_details.features.order.application.exception.OrderNotFoundException;
 import com.flower_details.features.users.application.exception.EmailAlreadyRegisteredException;
 import com.flower_details.features.users.application.exception.UserNotFoundException;
 import com.flower_details.shared.domain.DomainException;
@@ -89,6 +90,11 @@ class GlobalExceptionHandler {
 			HttpServletRequest request
 	) {
 		return build(HttpStatus.NOT_FOUND, "Producto no encontrado", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(OrderNotFoundException.class)
+	ResponseEntity<ApiErrorResponse> handleOrderNotFound(OrderNotFoundException exception, HttpServletRequest request) {
+		return build(HttpStatus.NOT_FOUND, "Pedido no encontrado", exception.getMessage(), request);
 	}
 
 	@ExceptionHandler({CartNotFoundException.class, CartItemNotFoundException.class, CartProductUnavailableException.class})

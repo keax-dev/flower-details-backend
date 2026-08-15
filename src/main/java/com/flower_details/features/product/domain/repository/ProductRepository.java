@@ -20,5 +20,7 @@ public interface ProductRepository {
 
 	List<Product> findByIds(Collection<Long> ids);
 
+	List<Product> findActiveByIds(Collection<Long> ids);
+
 	PageResult<Product> findAllActive(PageRequest pageRequest);
 }

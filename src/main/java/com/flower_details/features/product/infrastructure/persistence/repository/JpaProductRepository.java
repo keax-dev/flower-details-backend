@@ -58,6 +58,16 @@ class JpaProductRepository implements ProductRepository {
 	}
 
 	@Override
+	public List<Product> findActiveByIds(Collection<Long> ids) {
+		if (ids.isEmpty()) {
+			return List.of();
+		}
+		return repository.findByIdInAndActiveTrueAndCategory_ActiveTrue(ids).stream()
+				.map(ProductPersistenceMapper::toDomain)
+				.toList();
+	}
+
+	@Override
 	public PageResult<Product> findAllActive(PageRequest pageRequest) {
 		Page<ProductJpaEntity> page = repository.findAllByActiveTrueAndCategory_ActiveTrue(
 				org.springframework.data.domain.PageRequest.of(

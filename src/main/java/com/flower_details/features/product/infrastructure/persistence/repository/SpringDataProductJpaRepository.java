@@ -17,5 +17,7 @@ interface SpringDataProductJpaRepository extends JpaRepository<ProductJpaEntity,
 
 	List<ProductJpaEntity> findByIdIn(Collection<Long> ids);
 
+	List<ProductJpaEntity> findByIdInAndActiveTrueAndCategory_ActiveTrue(Collection<Long> ids);
+
 	Page<ProductJpaEntity> findAllByActiveTrueAndCategory_ActiveTrue(Pageable pageable);
 }
