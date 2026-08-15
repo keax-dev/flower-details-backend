@@ -20,7 +20,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 
 import java.util.UUID;
 import java.awt.image.BufferedImage;
@@ -33,6 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -76,23 +76,35 @@ class ProductIntegrationTests {
 				true
 		));
 
-		MvcResult createResult = mockMvc.perform(multipart("/api/products")
-						.file(image("images", "ramo.png", FIRST_IMAGE))
+		MvcResult createResult = mockMvc.perform(post("/api/products")
 						.cookie(adminCookie, csrfToken.cookie())
 						.header(csrfToken.headerName(), csrfToken.token())
-						.param("categoryId", category.id().toString())
-						.param("title", "Ramo premium " + suffix)
-						.param("description", "Ramo floral premium")
-						.param("price", "29.90")
-						.param("active", "true"))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "categoryId": %d,
+								  "title": "Ramo premium %s",
+								  "description": "Ramo floral premium",
+								  "price": 29.90,
+								  "active": true
+								}
+								""".formatted(category.id(), suffix)))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.title").value("Ramo premium " + suffix))
 				.andExpect(jsonPath("$.category.id").value(category.id()))
-				.andExpect(jsonPath("$.images[0].contentType").value("image/png"))
+				.andExpect(jsonPath("$.images").isEmpty())
 				.andReturn();
 
 		Long productId = readLong(createResult, "$.id");
-		String firstImageUrl = readString(createResult, "$.images[0].url");
+		MvcResult firstUploadResult = mockMvc.perform(multipart("/api/products/{id}/images", productId)
+						.file(image("images", "ramo.png", FIRST_IMAGE))
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.images[0].contentType").value("image/png"))
+				.andReturn();
+
+		String firstImageUrl = readString(firstUploadResult, "$.images[0].url");
 
 		mockMvc.perform(get("/api/products"))
 				.andExpect(status().isOk())
@@ -106,30 +118,34 @@ class ProductIntegrationTests {
 				.andExpect(status().isOk())
 				.andExpect(result -> assertThat(result.getResponse().getContentAsByteArray()).isEqualTo(FIRST_IMAGE));
 
-		MockMultipartHttpServletRequestBuilder updateRequest = multipart("/api/products/{id}", productId);
-		updateRequest.with(request -> {
-			request.setMethod("PUT");
-			return request;
-		});
-
-		MvcResult updateResult = mockMvc.perform(updateRequest
-						.file(image("images", "actualizado.png", SECOND_IMAGE))
+		mockMvc.perform(put("/api/products/{id}", productId)
 						.cookie(adminCookie, csrfToken.cookie())
 						.header(csrfToken.headerName(), csrfToken.token())
-						.param("categoryId", category.id().toString())
-						.param("title", "Ramo actualizado " + suffix)
-						.param("description", "Ramo floral actualizado")
-						.param("price", "35.50")
-						.param("active", "true"))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "categoryId": %d,
+								  "title": "Ramo actualizado %s",
+								  "description": "Ramo floral actualizado",
+								  "price": 35.50,
+								  "active": true
+								}
+								""".formatted(category.id(), suffix)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.title").value("Ramo actualizado " + suffix))
-				.andExpect(jsonPath("$.images[0].contentType").value("image/png"))
+				.andExpect(jsonPath("$.title").value("Ramo actualizado " + suffix));
+
+		MvcResult secondUploadResult = mockMvc.perform(multipart("/api/products/{id}/images", productId)
+						.file(image("images", "actualizado.png", SECOND_IMAGE))
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.images.length()").value(2))
 				.andReturn();
 
-		String secondImageUrl = readString(updateResult, "$.images[0].url");
+		String secondImageUrl = readString(secondUploadResult, "$.images[1].url");
 
 		mockMvc.perform(get(firstImageUrl))
-				.andExpect(status().isNotFound());
+				.andExpect(status().isOk());
 		mockMvc.perform(get(secondImageUrl))
 				.andExpect(status().isOk())
 				.andExpect(result -> assertThat(result.getResponse().getContentAsByteArray()).isEqualTo(SECOND_IMAGE));
@@ -152,13 +168,11 @@ class ProductIntegrationTests {
 
 	@Test
 	void anonymousUserCannotCreateProduct() throws Exception {
-		mockMvc.perform(multipart("/api/products")
-						.file(image("images", "sin-permiso.png", FIRST_IMAGE))
-						.param("categoryId", "1")
-						.param("title", "Sin permiso")
-						.param("description", "No deberia crearse")
-						.param("price", "10.00")
-						.param("active", "true"))
+		mockMvc.perform(post("/api/products")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"categoryId":1,"title":"Sin permiso","description":"No deberia crearse","price":10.00,"active":true}
+								"""))
 				.andExpect(status().isUnauthorized());
 	}
 
@@ -168,13 +182,12 @@ class ProductIntegrationTests {
 		Cookie adminCookie = createAdminAndLogin(suffix);
 		Category category = categoryRepository.save(Category.create("CSRF " + suffix, "Categoria de prueba", true));
 
-		mockMvc.perform(multipart("/api/products")
-						.file(image("images", "ramo.png", FIRST_IMAGE))
+		mockMvc.perform(post("/api/products")
 						.cookie(adminCookie)
-						.param("categoryId", category.id().toString())
-						.param("title", "Sin CSRF")
-						.param("description", "No debe crearse")
-						.param("price", "10.00"))
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"categoryId":%d,"title":"Sin CSRF","description":"No debe crearse","price":10.00,"active":true}
+								""".formatted(category.id())))
 				.andExpect(status().isForbidden());
 	}
 
@@ -184,15 +197,14 @@ class ProductIntegrationTests {
 		Cookie adminCookie = createAdminAndLogin(suffix);
 		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
 		Category category = categoryRepository.save(Category.create("Imagen invalida " + suffix, "Categoria de prueba", true));
+		var product = productRepository.save(com.flower_details.features.product.domain.model.Product.create(
+				category.id(), "Producto invalido", "Producto para validar archivo", new java.math.BigDecimal("10.00"), true
+		));
 
-		mockMvc.perform(multipart("/api/products")
+		mockMvc.perform(multipart("/api/products/{id}/images", product.id())
 						.file(new MockMultipartFile("images", "falso.png", "image/png", new byte[] {1, 2, 3, 4}))
 						.cookie(adminCookie, csrfToken.cookie())
-						.header(csrfToken.headerName(), csrfToken.token())
-						.param("categoryId", category.id().toString())
-						.param("title", "Imagen falsa")
-						.param("description", "No debe almacenarse")
-						.param("price", "10.00"))
+						.header(csrfToken.headerName(), csrfToken.token()))
 				.andExpect(status().isBadRequest());
 	}
 

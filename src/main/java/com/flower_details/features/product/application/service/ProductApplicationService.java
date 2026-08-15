@@ -72,7 +72,6 @@ public class ProductApplicationService {
 	@Transactional
 	public ProductView createProduct(CreateProductCommand command) {
 		Category category = findCategory(command.categoryId());
-		List<UploadFile> images = requireImages(command.images());
 
 		Product product = Product.create(
 				command.categoryId(),
@@ -82,9 +81,7 @@ public class ProductApplicationService {
 				command.active()
 		);
 		Product saved = productRepository.save(product);
-		List<ProductImage> savedImages = storeImages(saved.id(), images);
-
-		return ProductView.from(saved, category, savedImages);
+		return ProductView.from(saved, category, List.of());
 	}
 
 	@Transactional
@@ -102,15 +99,18 @@ public class ProductApplicationService {
 		);
 		Product saved = productRepository.save(product);
 
-		List<UploadFile> newImages = normalizeFiles(command.images());
-		if (!newImages.isEmpty()) {
-			List<ProductImage> currentImages = productImageRepository.findActiveByProductId(saved.id());
-			productImageRepository.deleteAllActiveByProductId(saved.id());
-			storeImages(saved.id(), newImages);
-			currentImages.forEach(image -> productImageFileLifecycle.deleteAfterCommit(image.storedFileName()));
-		}
-
 		return ProductView.from(saved, category, productImageRepository.findActiveByProductId(saved.id()));
+	}
+
+	@Transactional
+	public ProductView addProductImages(Long productId, List<UploadFile> files) {
+		Product product = productRepository.findById(productId)
+				.orElseThrow(() -> new ProductNotFoundException(productId));
+		List<UploadFile> images = requireImages(files);
+		List<ProductImage> currentImages = productImageRepository.findActiveByProductId(product.id());
+		List<ProductImage> newImages = storeImages(product.id(), images, currentImages.size());
+
+		return ProductView.from(product, findCategory(product.categoryId()), mergeImages(currentImages, newImages));
 	}
 
 	@Transactional
@@ -141,11 +141,11 @@ public class ProductApplicationService {
 		);
 	}
 
-	private List<ProductImage> storeImages(Long productId, List<UploadFile> files) {
+	private List<ProductImage> storeImages(Long productId, List<UploadFile> files, int initialSortOrder) {
 		List<StoredFile> storedFiles = new ArrayList<>();
 		try {
 			List<ProductImage> images = new ArrayList<>();
-			int sortOrder = 0;
+			int sortOrder = initialSortOrder;
 			for (UploadFile file : files) {
 				StoredFile stored = productImageStorage.store(file);
 				storedFiles.add(stored);
@@ -166,6 +166,12 @@ public class ProductApplicationService {
 			cleanupStoredFiles(storedFiles);
 			throw exception;
 		}
+	}
+
+	private List<ProductImage> mergeImages(List<ProductImage> currentImages, List<ProductImage> newImages) {
+		List<ProductImage> allImages = new ArrayList<>(currentImages);
+		allImages.addAll(newImages);
+		return allImages;
 	}
 
 	private void cleanupStoredFiles(List<StoredFile> storedFiles) {

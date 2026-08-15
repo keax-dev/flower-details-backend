@@ -1,19 +1,17 @@
 package com.flower_details.features.product.presentation.controller;
 
-import com.flower_details.features.product.application.dto.command.CreateProductCommand;
-import com.flower_details.features.product.application.dto.command.UpdateProductCommand;
 import com.flower_details.features.product.application.dto.storage.UploadFile;
 import com.flower_details.features.product.application.service.ProductApplicationService;
+import com.flower_details.features.product.presentation.dto.request.CreateProductRequest;
+import com.flower_details.features.product.presentation.dto.request.UpdateProductRequest;
 import com.flower_details.features.product.presentation.dto.response.ProductResponse;
 import com.flower_details.features.product.presentation.upload.MultipartUploadFile;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.presentation.PageResponse;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,13 +22,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Validated
@@ -57,53 +55,30 @@ class ProductController {
 		return ProductResponse.from(productApplicationService.getActiveProduct(id));
 	}
 
-	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasRole('ADMIN')")
 	@ResponseStatus(HttpStatus.CREATED)
-	ProductResponse createProduct(
-			@RequestParam @NotNull(message = "La categoria es obligatoria") Long categoryId,
-			@RequestParam @NotBlank(message = "El titulo es obligatorio")
-			@Size(max = 160, message = "El titulo no puede superar 160 caracteres") String title,
-			@RequestParam @NotBlank(message = "La descripcion es obligatoria")
-			@Size(max = 1000, message = "La descripcion no puede superar 1000 caracteres") String description,
-			@RequestParam @NotNull(message = "El precio es obligatorio")
-			@Positive(message = "El precio debe ser mayor a cero") BigDecimal price,
-			@RequestParam(defaultValue = "true") boolean active,
-			@RequestParam(name = "images", required = false) List<MultipartFile> images
-	) {
-		return ProductResponse.from(productApplicationService.createProduct(new CreateProductCommand(
-				categoryId,
-				title,
-				description,
-				price,
-				active,
-				toUploadFiles(images)
-		)));
+	ProductResponse createProduct(@Valid @RequestBody CreateProductRequest request) {
+		return ProductResponse.from(productApplicationService.createProduct(request.toCommand()));
 	}
 
-	@PutMapping(path = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasRole('ADMIN')")
 	ProductResponse updateProduct(
 			@PathVariable Long id,
-			@RequestParam @NotNull(message = "La categoria es obligatoria") Long categoryId,
-			@RequestParam @NotBlank(message = "El titulo es obligatorio")
-			@Size(max = 160, message = "El titulo no puede superar 160 caracteres") String title,
-			@RequestParam @NotBlank(message = "La descripcion es obligatoria")
-			@Size(max = 1000, message = "La descripcion no puede superar 1000 caracteres") String description,
-			@RequestParam @NotNull(message = "El precio es obligatorio")
-			@Positive(message = "El precio debe ser mayor a cero") BigDecimal price,
-			@RequestParam @NotNull(message = "El estado activo es obligatorio") Boolean active,
-			@RequestParam(name = "images", required = false) List<MultipartFile> images
+			@Valid @RequestBody UpdateProductRequest request
 	) {
-		return ProductResponse.from(productApplicationService.updateProduct(new UpdateProductCommand(
-				id,
-				categoryId,
-				title,
-				description,
-				price,
-				active,
-				toUploadFiles(images)
-		)));
+		return ProductResponse.from(productApplicationService.updateProduct(request.toCommand(id)));
+	}
+
+	@PostMapping(path = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PreAuthorize("hasRole('ADMIN')")
+	@ResponseStatus(HttpStatus.CREATED)
+	ProductResponse addImages(
+			@PathVariable Long id,
+			@RequestParam(name = "images") List<MultipartFile> images
+	) {
+		return ProductResponse.from(productApplicationService.addProductImages(id, toUploadFiles(images)));
 	}
 
 	@DeleteMapping("/{id}")
