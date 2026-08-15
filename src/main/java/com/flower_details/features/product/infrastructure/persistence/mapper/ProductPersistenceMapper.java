@@ -1,7 +1,7 @@
 package com.flower_details.features.product.infrastructure.persistence.mapper;
 
 import com.flower_details.features.product.domain.model.Product;
-import com.flower_details.features.product.infrastructure.persistence.entity.ProductCategoryReferenceJpaEntity;
+import com.flower_details.features.category.infrastructure.persistence.entity.CategoryJpaEntity;
 import com.flower_details.features.product.infrastructure.persistence.entity.ProductJpaEntity;
 
 public final class ProductPersistenceMapper {
@@ -22,7 +22,7 @@ public final class ProductPersistenceMapper {
 		);
 	}
 
-	public static ProductJpaEntity toEntity(Product product, ProductCategoryReferenceJpaEntity category) {
+	public static ProductJpaEntity toEntity(Product product, CategoryJpaEntity category) {
 		return new ProductJpaEntity(
 				product.id(),
 				category,

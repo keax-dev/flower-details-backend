@@ -1,10 +1,14 @@
 package com.flower_details.features.order.infrastructure.persistence.entity;
 
+import com.flower_details.features.product.infrastructure.persistence.entity.ProductJpaEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -29,11 +33,21 @@ public class OrderItemJpaEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "order_id", nullable = false)
-	private Long orderId;
+	@ManyToOne(optional = false)
+	@JoinColumn(
+			name = "order_id",
+			nullable = false,
+			foreignKey = @ForeignKey(name = "fk_order_items_order")
+	)
+	private OrderJpaEntity order;
 
-	@Column(name = "product_id", nullable = false)
-	private Long productId;
+	@ManyToOne(optional = false)
+	@JoinColumn(
+			name = "product_id",
+			nullable = false,
+			foreignKey = @ForeignKey(name = "fk_order_items_product")
+	)
+	private ProductJpaEntity product;
 
 	@Column(name = "product_title", nullable = false, length = 160)
 	private String productTitle;
@@ -58,5 +72,13 @@ public class OrderItemJpaEntity {
 		if (createdAt == null) {
 			createdAt = Instant.now();
 		}
+	}
+
+	public Long getOrderId() {
+		return order.getId();
+	}
+
+	public Long getProductId() {
+		return product.getId();
 	}
 }

@@ -8,5 +8,5 @@ import java.util.Optional;
 
 interface SpringDataCartJpaRepository extends JpaRepository<CartJpaEntity, Long> {
 
-	Optional<CartJpaEntity> findByCustomerIdAndStatus(Long customerId, CartStatus status);
+	Optional<CartJpaEntity> findByCustomer_IdAndStatus(Long customerId, CartStatus status);
 }

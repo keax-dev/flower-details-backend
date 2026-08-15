@@ -3,6 +3,8 @@ import com.flower_details.features.order.domain.model.Order;
 import com.flower_details.features.order.domain.repository.OrderRepository;
 import com.flower_details.features.order.infrastructure.persistence.entity.OrderJpaEntity;
 import com.flower_details.features.order.infrastructure.persistence.mapper.OrderPersistenceMapper;
+import com.flower_details.features.users.infrastructure.persistence.entity.UserJpaEntity;
+import jakarta.persistence.EntityManager;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.domain.pagination.PageResult;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +19,17 @@ import java.util.Optional;
 class JpaOrderRepository implements OrderRepository {
 
 	private final SpringDataOrderJpaRepository repository;
+	private final EntityManager entityManager;
 
 	@Override
 	public Order save(Order order) {
-		return OrderPersistenceMapper.toDomain(repository.save(OrderPersistenceMapper.toEntity(order)));
+		UserJpaEntity customer = entityManager.getReference(UserJpaEntity.class, order.customerId());
+		UserJpaEntity assignedOperator = order.assignedOperatorId() == null
+				? null
+				: entityManager.getReference(UserJpaEntity.class, order.assignedOperatorId());
+		return OrderPersistenceMapper.toDomain(
+				repository.save(OrderPersistenceMapper.toEntity(order, customer, assignedOperator))
+		);
 	}
 
 	@Override
@@ -30,7 +39,7 @@ class JpaOrderRepository implements OrderRepository {
 
 	@Override
 	public PageResult<Order> findByCustomerId(Long customerId, PageRequest pageRequest) {
-		return toPage(repository.findAllByCustomerId(customerId, pageable(pageRequest)));
+		return toPage(repository.findAllByCustomer_Id(customerId, pageable(pageRequest)));
 	}
 
 	@Override

@@ -2,17 +2,19 @@ package com.flower_details.features.order.infrastructure.persistence.mapper;
 
 import com.flower_details.features.order.domain.model.OrderItem;
 import com.flower_details.features.order.infrastructure.persistence.entity.OrderItemJpaEntity;
+import com.flower_details.features.order.infrastructure.persistence.entity.OrderJpaEntity;
+import com.flower_details.features.product.infrastructure.persistence.entity.ProductJpaEntity;
 
 public final class OrderItemPersistenceMapper {
 
 	private OrderItemPersistenceMapper() {
 	}
 
-	public static OrderItemJpaEntity toEntity(OrderItem item) {
+	public static OrderItemJpaEntity toEntity(OrderItem item, OrderJpaEntity order, ProductJpaEntity product) {
 		return new OrderItemJpaEntity(
 				item.id(),
-				item.orderId(),
-				item.productId(),
+				order,
+				product,
 				item.productTitle(),
 				item.productImageUrl(),
 				item.quantity(),

@@ -2,6 +2,7 @@ package com.flower_details.features.order.infrastructure.persistence.entity;
 
 import com.flower_details.features.order.domain.model.FulfillmentType;
 import com.flower_details.features.order.domain.model.OrderStatus;
+import com.flower_details.features.users.infrastructure.persistence.entity.UserJpaEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,6 +10,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -37,11 +41,20 @@ public class OrderJpaEntity {
 	@Column(name = "order_number", nullable = false, length = 40)
 	private String orderNumber;
 
-	@Column(name = "customer_id", nullable = false)
-	private Long customerId;
+	@ManyToOne(optional = false)
+	@JoinColumn(
+			name = "customer_id",
+			nullable = false,
+			foreignKey = @ForeignKey(name = "fk_orders_customer")
+	)
+	private UserJpaEntity customer;
 
-	@Column(name = "assigned_operator_id")
-	private Long assignedOperatorId;
+	@ManyToOne
+	@JoinColumn(
+			name = "assigned_operator_id",
+			foreignKey = @ForeignKey(name = "fk_orders_assigned_operator")
+	)
+	private UserJpaEntity assignedOperator;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 30)
@@ -105,5 +118,13 @@ public class OrderJpaEntity {
 	@PreUpdate
 	void preUpdate() {
 		updatedAt = Instant.now();
+	}
+
+	public Long getCustomerId() {
+		return customer.getId();
+	}
+
+	public Long getAssignedOperatorId() {
+		return assignedOperator == null ? null : assignedOperator.getId();
 	}
 }

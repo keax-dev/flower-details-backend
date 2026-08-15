@@ -1,5 +1,6 @@
 package com.flower_details.features.cart.infrastructure.persistence.entity;
 
+import com.flower_details.features.product.infrastructure.persistence.entity.ProductJpaEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
@@ -39,7 +40,7 @@ public class CartItemJpaEntity {
 
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(name = "fk_cart_items_product"))
-	private CartProductReferenceJpaEntity product;
+	private ProductJpaEntity product;
 
 	@Column(nullable = false)
 	private int quantity;

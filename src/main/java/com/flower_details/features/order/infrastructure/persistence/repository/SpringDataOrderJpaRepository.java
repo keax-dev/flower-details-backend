@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 interface SpringDataOrderJpaRepository extends JpaRepository<OrderJpaEntity, Long> {
 	Optional<OrderJpaEntity> findById(Long id);
-	Page<OrderJpaEntity> findAllByCustomerId(Long customerId, Pageable pageable);
+	Page<OrderJpaEntity> findAllByCustomer_Id(Long customerId, Pageable pageable);
 }

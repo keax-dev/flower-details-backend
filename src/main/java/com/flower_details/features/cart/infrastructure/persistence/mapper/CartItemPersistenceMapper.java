@@ -3,7 +3,7 @@ package com.flower_details.features.cart.infrastructure.persistence.mapper;
 import com.flower_details.features.cart.domain.model.CartItem;
 import com.flower_details.features.cart.infrastructure.persistence.entity.CartItemJpaEntity;
 import com.flower_details.features.cart.infrastructure.persistence.entity.CartJpaEntity;
-import com.flower_details.features.cart.infrastructure.persistence.entity.CartProductReferenceJpaEntity;
+import com.flower_details.features.product.infrastructure.persistence.entity.ProductJpaEntity;
 
 public final class CartItemPersistenceMapper {
 
@@ -11,7 +11,7 @@ public final class CartItemPersistenceMapper {
 	}
 
 	public static CartItemJpaEntity toEntity(
-			CartItem item, CartJpaEntity cart, CartProductReferenceJpaEntity product
+			CartItem item, CartJpaEntity cart, ProductJpaEntity product
 	) {
 		return new CartItemJpaEntity(
 				item.id(), cart, product, item.quantity(), item.unitPrice(), item.createdAt(), item.updatedAt()

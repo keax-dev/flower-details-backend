@@ -1,6 +1,7 @@
 package com.flower_details.features.cart.infrastructure.persistence.entity;
 
 import com.flower_details.features.cart.domain.model.CartStatus;
+import com.flower_details.features.users.infrastructure.persistence.entity.UserJpaEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -8,6 +9,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -32,8 +36,13 @@ public class CartJpaEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "customer_id", nullable = false)
-	private Long customerId;
+	@ManyToOne(optional = false)
+	@JoinColumn(
+			name = "customer_id",
+			nullable = false,
+			foreignKey = @ForeignKey(name = "fk_carts_customer")
+	)
+	private UserJpaEntity customer;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
@@ -57,5 +66,9 @@ public class CartJpaEntity {
 	@PreUpdate
 	void preUpdate() {
 		updatedAt = Instant.now();
+	}
+
+	public Long getCustomerId() {
+		return customer.getId();
 	}
 }

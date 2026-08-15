@@ -2,7 +2,7 @@ package com.flower_details.features.product.infrastructure.persistence.repositor
 
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.repository.ProductRepository;
-import com.flower_details.features.product.infrastructure.persistence.entity.ProductCategoryReferenceJpaEntity;
+import com.flower_details.features.category.infrastructure.persistence.entity.CategoryJpaEntity;
 import com.flower_details.features.product.infrastructure.persistence.entity.ProductJpaEntity;
 import com.flower_details.features.product.infrastructure.persistence.mapper.ProductPersistenceMapper;
 import jakarta.persistence.EntityManager;
@@ -26,8 +26,8 @@ class JpaProductRepository implements ProductRepository {
 
 	@Override
 	public Product save(Product product) {
-		ProductCategoryReferenceJpaEntity category = entityManager.getReference(
-				ProductCategoryReferenceJpaEntity.class,
+		CategoryJpaEntity category = entityManager.getReference(
+				CategoryJpaEntity.class,
 				product.categoryId()
 		);
 		ProductJpaEntity saved = repository.save(ProductPersistenceMapper.toEntity(product, category));

@@ -2,14 +2,15 @@ package com.flower_details.features.cart.infrastructure.persistence.mapper;
 
 import com.flower_details.features.cart.domain.model.Cart;
 import com.flower_details.features.cart.infrastructure.persistence.entity.CartJpaEntity;
+import com.flower_details.features.users.infrastructure.persistence.entity.UserJpaEntity;
 
 public final class CartPersistenceMapper {
 
 	private CartPersistenceMapper() {
 	}
 
-	public static CartJpaEntity toEntity(Cart cart) {
-		return new CartJpaEntity(cart.id(), cart.customerId(), cart.status(), cart.createdAt(), cart.updatedAt());
+	public static CartJpaEntity toEntity(Cart cart, UserJpaEntity customer) {
+		return new CartJpaEntity(cart.id(), customer, cart.status(), cart.createdAt(), cart.updatedAt());
 	}
 
 	public static Cart toDomain(CartJpaEntity entity) {

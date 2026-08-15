@@ -3,8 +3,8 @@ package com.flower_details.features.cart.infrastructure.persistence.repository;
 import com.flower_details.features.cart.domain.model.CartItem;
 import com.flower_details.features.cart.domain.repository.CartItemRepository;
 import com.flower_details.features.cart.infrastructure.persistence.entity.CartJpaEntity;
-import com.flower_details.features.cart.infrastructure.persistence.entity.CartProductReferenceJpaEntity;
 import com.flower_details.features.cart.infrastructure.persistence.mapper.CartItemPersistenceMapper;
+import com.flower_details.features.product.infrastructure.persistence.entity.ProductJpaEntity;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -22,7 +22,7 @@ class JpaCartItemRepository implements CartItemRepository {
 	@Override
 	public CartItem save(CartItem item) {
 		CartJpaEntity cart = entityManager.getReference(CartJpaEntity.class, item.cartId());
-		CartProductReferenceJpaEntity product = entityManager.getReference(CartProductReferenceJpaEntity.class, item.productId());
+		ProductJpaEntity product = entityManager.getReference(ProductJpaEntity.class, item.productId());
 		return CartItemPersistenceMapper.toDomain(repository.save(CartItemPersistenceMapper.toEntity(item, cart, product)));
 	}
 
