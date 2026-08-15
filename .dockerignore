@@ -1,0 +1,9 @@
+.git
+.idea
+.mvn
+target
+uploads
+.env
+*.iml
+README.md
+HELP.md
