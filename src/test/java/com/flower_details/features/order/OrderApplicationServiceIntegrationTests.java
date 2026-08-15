@@ -6,6 +6,7 @@ import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.category.domain.repository.CategoryRepository;
 import com.flower_details.features.order.application.dto.command.CreateOrderCommand;
 import com.flower_details.features.order.application.dto.view.OrderView;
+import com.flower_details.features.order.application.dto.view.OrderAuditView;
 import com.flower_details.features.order.application.service.OrderApplicationService;
 import com.flower_details.features.order.domain.model.FulfillmentType;
 import com.flower_details.features.order.domain.model.OrderStatus;
@@ -47,6 +48,7 @@ class OrderApplicationServiceIntegrationTests {
 	void createsAnOrderWithPriceSnapshotAndOnlyItsOperatorCanAdvanceIt() {
 		String suffix = UUID.randomUUID().toString();
 		User customer = userRepository.save(User.registerCustomer("customer-" + suffix + "@flowerdetails.test", "hash"));
+		User admin = userRepository.save(User.createStaff("admin-" + suffix + "@flowerdetails.test", "hash", UserRole.ADMIN));
 		User assignedOperator = userRepository.save(User.createStaff("operator-a-" + suffix + "@flowerdetails.test", "hash", UserRole.OPERATOR));
 		User anotherOperator = userRepository.save(User.createStaff("operator-b-" + suffix + "@flowerdetails.test", "hash", UserRole.OPERATOR));
 		Category category = categoryRepository.save(Category.create("Pedidos " + suffix, "Categoria de prueba", true));
@@ -76,5 +78,15 @@ class OrderApplicationServiceIntegrationTests {
 				order.id(), assignedOperator.id(), UserRole.OPERATOR, OrderStatus.IN_PREPARATION
 		);
 		assertThat(inPreparation.status()).isEqualTo(OrderStatus.IN_PREPARATION);
+		orderApplicationService.cancel(order.id(), admin.id(), UserRole.ADMIN, "Cliente solicito cancelar el pedido");
+
+		assertThat(orderApplicationService.auditTrail(order.id(), customer.id(), UserRole.CUSTOMER))
+				.extracting(OrderAuditView::action)
+				.containsExactly(
+						com.flower_details.features.order.domain.model.OrderAuditAction.CREATED,
+						com.flower_details.features.order.domain.model.OrderAuditAction.ASSIGNED,
+						com.flower_details.features.order.domain.model.OrderAuditAction.STATUS_CHANGED,
+						com.flower_details.features.order.domain.model.OrderAuditAction.CANCELLED
+				);
 	}
 }

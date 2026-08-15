@@ -7,6 +7,7 @@ import com.flower_details.features.order.presentation.dto.request.CancelOrderReq
 import com.flower_details.features.order.presentation.dto.request.ChangeOrderStatusRequest;
 import com.flower_details.features.order.presentation.dto.request.CreateOrderRequest;
 import com.flower_details.features.order.presentation.dto.response.OrderResponse;
+import com.flower_details.features.order.presentation.dto.response.OrderAuditResponse;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.presentation.PageResponse;
 import jakarta.validation.Valid;
@@ -26,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -67,6 +70,15 @@ class OrderController {
 	@PreAuthorize("hasAnyRole('CUSTOMER','ADMIN','OPERATOR')")
 	OrderResponse get(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUserPrincipal principal) {
 		return OrderResponse.from(service.get(id, principal.id(), principal.role()));
+	}
+
+	@GetMapping("/{id}/audit")
+	@PreAuthorize("hasAnyRole('CUSTOMER','ADMIN','OPERATOR')")
+	List<OrderAuditResponse> auditTrail(
+			@PathVariable Long id,
+			@AuthenticationPrincipal AuthenticatedUserPrincipal principal
+	) {
+		return service.auditTrail(id, principal.id(), principal.role()).stream().map(OrderAuditResponse::from).toList();
 	}
 
 	@PatchMapping("/{id}/assign")

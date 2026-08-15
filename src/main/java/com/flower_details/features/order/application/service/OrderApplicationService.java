@@ -5,12 +5,16 @@ import com.flower_details.features.cart.domain.model.CartItem;
 import com.flower_details.features.cart.domain.repository.CartItemRepository;
 import com.flower_details.features.cart.domain.repository.CartRepository;
 import com.flower_details.features.order.application.dto.command.CreateOrderCommand;
+import com.flower_details.features.order.application.dto.view.OrderAuditView;
 import com.flower_details.features.order.application.dto.view.OrderView;
 import com.flower_details.features.order.application.exception.OrderNotFoundException;
+import com.flower_details.features.order.domain.model.OrderAudit;
+import com.flower_details.features.order.domain.model.OrderAuditAction;
 import com.flower_details.features.order.domain.model.Order;
 import com.flower_details.features.order.domain.model.OrderItem;
 import com.flower_details.features.order.domain.model.OrderStatus;
 import com.flower_details.features.order.domain.repository.OrderItemRepository;
+import com.flower_details.features.order.domain.repository.OrderAuditRepository;
 import com.flower_details.features.order.domain.repository.OrderRepository;
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.model.ProductImage;
@@ -47,6 +51,7 @@ public class OrderApplicationService {
 	private final ProductImageRepository imageRepository;
 	private final OrderRepository orderRepository;
 	private final OrderItemRepository orderItemRepository;
+	private final OrderAuditRepository orderAuditRepository;
 	private final UserRepository userRepository;
 
 	@Transactional
@@ -65,6 +70,7 @@ public class OrderApplicationService {
 				command.deliveryAddress(),
 				command.additionalInstructions()
 		));
+		recordAudit(order, customerId, OrderAuditAction.CREATED, null, null);
 
 		List<OrderItem> items = orderItemRepository.saveAll(toOrderItems(order.id(), cartItems, availableProducts));
 		cartItemRepository.deleteAllActiveByCartId(cart.id());
@@ -84,10 +90,15 @@ public class OrderApplicationService {
 	@Transactional(readOnly = true)
 	public OrderView get(Long id, Long requesterId, UserRole role) {
 		Order order = findOrder(id);
-		if (role == UserRole.CUSTOMER && !order.customerId().equals(requesterId)) {
-			throw new OrderNotFoundException(id);
-		}
+		ensureCanViewOrder(order, requesterId, role);
 		return toView(order);
+	}
+
+	@Transactional(readOnly = true)
+	public List<OrderAuditView> auditTrail(Long id, Long requesterId, UserRole role) {
+		Order order = findOrder(id);
+		ensureCanViewOrder(order, requesterId, role);
+		return orderAuditRepository.findByOrderId(order.id()).stream().map(OrderAuditView::from).toList();
 	}
 
 	@Transactional
@@ -96,8 +107,11 @@ public class OrderApplicationService {
 		Long operatorId = role == UserRole.OPERATOR ? requesterId : requireOperatorId(requestedOperatorId);
 		ensureActiveOperator(operatorId);
 
+		OrderStatus previousStatus = order.status();
 		order.assignTo(operatorId, Instant.now());
-		return toView(orderRepository.save(order));
+		Order savedOrder = orderRepository.save(order);
+		recordAudit(savedOrder, requesterId, OrderAuditAction.ASSIGNED, previousStatus, "Operador asignado: " + operatorId);
+		return toView(savedOrder);
 	}
 
 	@Transactional
@@ -105,8 +119,11 @@ public class OrderApplicationService {
 		Order order = findOrder(id);
 		ensureCanManageOrder(order, requesterId, role);
 
+		OrderStatus previousStatus = order.status();
 		order.changeStatus(status, Instant.now());
-		return toView(orderRepository.save(order));
+		Order savedOrder = orderRepository.save(order);
+		recordAudit(savedOrder, requesterId, OrderAuditAction.STATUS_CHANGED, previousStatus, null);
+		return toView(savedOrder);
 	}
 
 	@Transactional
@@ -117,8 +134,10 @@ public class OrderApplicationService {
 			throw new DomainException("El cliente solo puede cancelar sus pedidos generados");
 		}
 
+		OrderStatus previousStatus = order.status();
 		order.cancel(reason, Instant.now());
-		orderRepository.save(order);
+		Order savedOrder = orderRepository.save(order);
+		recordAudit(savedOrder, requesterId, OrderAuditAction.CANCELLED, previousStatus, reason);
 	}
 
 	private Cart findActiveCartForCheckout(Long customerId) {
@@ -189,6 +208,24 @@ public class OrderApplicationService {
 		if (role == UserRole.OPERATOR && !requesterId.equals(order.assignedOperatorId())) {
 			throw new DomainException("El operador solo puede gestionar pedidos que tiene asignados");
 		}
+	}
+
+	private void ensureCanViewOrder(Order order, Long requesterId, UserRole role) {
+		if (role == UserRole.CUSTOMER && !order.customerId().equals(requesterId)) {
+			throw new OrderNotFoundException(order.id());
+		}
+	}
+
+	private void recordAudit(
+			Order order,
+			Long actorUserId,
+			OrderAuditAction action,
+			OrderStatus previousStatus,
+			String details
+	) {
+		orderAuditRepository.save(OrderAudit.create(
+				order.id(), actorUserId, action, previousStatus, order.status(), details, Instant.now()
+		));
 	}
 
 	private Order findOrder(Long id) {
