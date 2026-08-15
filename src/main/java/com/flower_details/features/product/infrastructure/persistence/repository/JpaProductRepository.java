@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,6 +47,14 @@ class JpaProductRepository implements ProductRepository {
 	@Override
 	public Optional<Product> findActiveById(Long id) {
 		return repository.findByIdAndActiveTrueAndCategory_ActiveTrue(id).map(ProductPersistenceMapper::toDomain);
+	}
+
+	@Override
+	public List<Product> findByIds(Collection<Long> ids) {
+		if (ids.isEmpty()) {
+			return List.of();
+		}
+		return repository.findByIdIn(ids).stream().map(ProductPersistenceMapper::toDomain).toList();
 	}
 
 	@Override

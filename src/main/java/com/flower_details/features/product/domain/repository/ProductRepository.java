@@ -4,6 +4,7 @@ import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.domain.pagination.PageResult;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,8 @@ public interface ProductRepository {
 	Optional<Product> findById(Long id);
 
 	Optional<Product> findActiveById(Long id);
+
+	List<Product> findByIds(Collection<Long> ids);
 
 	PageResult<Product> findAllActive(PageRequest pageRequest);
 }

@@ -4,6 +4,9 @@ import com.flower_details.features.auth.application.exception.InvalidCredentials
 import com.flower_details.features.auth.application.exception.UserInactiveException;
 import com.flower_details.features.category.application.exception.CategoryNotFoundException;
 import com.flower_details.features.category.application.exception.CategoryTitleAlreadyExistsException;
+import com.flower_details.features.cart.application.exception.CartItemNotFoundException;
+import com.flower_details.features.cart.application.exception.CartNotFoundException;
+import com.flower_details.features.cart.application.exception.CartProductUnavailableException;
 import com.flower_details.features.product.application.exception.FileStorageException;
 import com.flower_details.features.product.application.exception.ProductImageNotFoundException;
 import com.flower_details.features.product.application.exception.ProductNotFoundException;
@@ -86,6 +89,11 @@ class GlobalExceptionHandler {
 			HttpServletRequest request
 	) {
 		return build(HttpStatus.NOT_FOUND, "Producto no encontrado", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler({CartNotFoundException.class, CartItemNotFoundException.class, CartProductUnavailableException.class})
+	ResponseEntity<ApiErrorResponse> handleCartNotFound(RuntimeException exception, HttpServletRequest request) {
+		return build(HttpStatus.NOT_FOUND, "Recurso del carrito no encontrado", exception.getMessage(), request);
 	}
 
 	@ExceptionHandler(ProductImageNotFoundException.class)
