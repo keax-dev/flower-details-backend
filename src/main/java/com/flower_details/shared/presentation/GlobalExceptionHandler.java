@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -131,6 +132,19 @@ class GlobalExceptionHandler {
 			HttpServletRequest request
 	) {
 		return build(HttpStatus.CONFLICT, "Conflicto de datos", "No se pudo completar la operacion", request);
+	}
+
+	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+	ResponseEntity<ApiErrorResponse> handleOptimisticLock(
+			ObjectOptimisticLockingFailureException exception,
+			HttpServletRequest request
+	) {
+		return build(
+				HttpStatus.CONFLICT,
+				"El pedido fue actualizado por otro usuario",
+				"Actualiza la informacion e intenta nuevamente",
+				request
+		);
 	}
 
 	@ExceptionHandler(Exception.class)

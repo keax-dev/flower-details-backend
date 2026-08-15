@@ -16,6 +16,7 @@ public final class OrderPersistenceMapper {
 	) {
 		return new OrderJpaEntity(
 				order.id(),
+				order.version(),
 				order.orderNumber(),
 				customer,
 				assignedOperator,
@@ -59,7 +60,8 @@ public final class OrderPersistenceMapper {
 				entity.getDispatchedAt(),
 				entity.getDeliveredAt(),
 				entity.getCancelledAt(),
-				entity.getUpdatedAt()
+				entity.getUpdatedAt(),
+				entity.getVersion()
 		);
 	}
 }

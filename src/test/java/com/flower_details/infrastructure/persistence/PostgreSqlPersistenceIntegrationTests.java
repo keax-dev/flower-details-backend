@@ -4,12 +4,17 @@ import com.flower_details.features.cart.domain.model.Cart;
 import com.flower_details.features.cart.domain.repository.CartRepository;
 import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.category.domain.repository.CategoryRepository;
+import com.flower_details.features.order.domain.model.FulfillmentType;
+import com.flower_details.features.order.domain.model.Order;
+import com.flower_details.features.order.domain.repository.OrderRepository;
 import com.flower_details.features.users.domain.model.User;
+import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.features.users.domain.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -24,6 +29,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Testcontainers
@@ -46,6 +52,9 @@ class PostgreSqlPersistenceIntegrationTests {
 
 	@Autowired
 	private CartRepository cartRepository;
+
+	@Autowired
+	private OrderRepository orderRepository;
 
 	@Autowired
 	private TransactionTemplate transactionTemplate;
@@ -119,6 +128,29 @@ class PostgreSqlPersistenceIntegrationTests {
 			releaseFirstTransaction.countDown();
 			executor.shutdownNow();
 		}
+	}
+
+	@Test
+	void optimisticOrderLockRejectsAStaleUpdate() {
+		User customer = userRepository.save(User.registerCustomer("postgres-order-customer@flowerdetails.test", "hash"));
+		User operator = userRepository.save(User.createStaff(
+				"postgres-order-operator@flowerdetails.test", "hash", UserRole.OPERATOR
+		));
+		Order saved = transactionTemplate.execute(status -> orderRepository.save(Order.create(
+				"FD-POSTGRES-VERSION", customer.id(), FulfillmentType.PICKUP, java.math.BigDecimal.TEN,
+				"Cliente", "0999999999", null, null
+		)));
+		assertThat(saved).isNotNull();
+
+		Order firstCopy = transactionTemplate.execute(status -> orderRepository.findById(saved.id()).orElseThrow());
+		Order staleCopy = transactionTemplate.execute(status -> orderRepository.findById(saved.id()).orElseThrow());
+
+		firstCopy.assignTo(operator.id(), java.time.Instant.now());
+		transactionTemplate.executeWithoutResult(status -> orderRepository.save(firstCopy));
+
+		staleCopy.assignTo(operator.id(), java.time.Instant.now());
+		assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status -> orderRepository.save(staleCopy)))
+				.isInstanceOf(ObjectOptimisticLockingFailureException.class);
 	}
 
 	private boolean tableExists(String tableName) {

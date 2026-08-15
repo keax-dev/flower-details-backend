@@ -8,6 +8,7 @@ import java.time.Instant;
 public class Order {
 
 	private final Long id;
+	private final Long version;
 	private final String orderNumber;
 	private final Long customerId;
 	private Long assignedOperatorId;
@@ -33,9 +34,10 @@ public class Order {
 			FulfillmentType fulfillmentType, BigDecimal total, String contactName, String contactPhone,
 			String deliveryAddress, String additionalInstructions, String cancellationReason, Instant createdAt,
 			Instant assignedAt, Instant preparationStartedAt, Instant readyAt, Instant dispatchedAt,
-			Instant deliveredAt, Instant cancelledAt, Instant updatedAt
+			Instant deliveredAt, Instant cancelledAt, Instant updatedAt, Long version
 	) {
 		this.id = id;
+		this.version = version;
 		this.orderNumber = requireText(orderNumber, "El numero de pedido es obligatorio", 40);
 		if (customerId == null) throw new DomainException("El cliente del pedido es obligatorio");
 		this.customerId = customerId;
@@ -65,16 +67,17 @@ public class Order {
 	public static Order create(String orderNumber, Long customerId, FulfillmentType fulfillmentType, BigDecimal total,
 			String contactName, String contactPhone, String deliveryAddress, String additionalInstructions) {
 		return new Order(null, orderNumber, customerId, null, OrderStatus.GENERATED, fulfillmentType, total,
-				contactName, contactPhone, deliveryAddress, additionalInstructions, null, null, null, null, null, null, null, null, null);
+				contactName, contactPhone, deliveryAddress, additionalInstructions, null, null, null, null, null, null, null, null, null, null);
 	}
 
 	public static Order restore(Long id, String orderNumber, Long customerId, Long assignedOperatorId, OrderStatus status,
 			FulfillmentType fulfillmentType, BigDecimal total, String contactName, String contactPhone, String deliveryAddress,
 			String additionalInstructions, String cancellationReason, Instant createdAt, Instant assignedAt,
-			Instant preparationStartedAt, Instant readyAt, Instant dispatchedAt, Instant deliveredAt, Instant cancelledAt, Instant updatedAt) {
+			Instant preparationStartedAt, Instant readyAt, Instant dispatchedAt, Instant deliveredAt, Instant cancelledAt,
+			Instant updatedAt, Long version) {
 		return new Order(id, orderNumber, customerId, assignedOperatorId, status, fulfillmentType, total, contactName,
 				contactPhone, deliveryAddress, additionalInstructions, cancellationReason, createdAt, assignedAt,
-				preparationStartedAt, readyAt, dispatchedAt, deliveredAt, cancelledAt, updatedAt);
+				preparationStartedAt, readyAt, dispatchedAt, deliveredAt, cancelledAt, updatedAt, version);
 	}
 
 	public void assignTo(Long operatorId, Instant now) {
@@ -130,6 +133,10 @@ public class Order {
 
 	public Long id() {
 		return id;
+	}
+
+	public Long version() {
+		return version;
 	}
 
 	public String orderNumber() {
