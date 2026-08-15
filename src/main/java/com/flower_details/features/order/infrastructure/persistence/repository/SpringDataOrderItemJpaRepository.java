@@ -3,5 +3,5 @@ import com.flower_details.features.order.infrastructure.persistence.entity.Order
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.*;
 interface SpringDataOrderItemJpaRepository extends JpaRepository<OrderItemJpaEntity, Long> {
-	List<OrderItemJpaEntity> findAllByOrderIdInOrderByCreatedAtAsc(Collection<Long> orderIds);
+	List<OrderItemJpaEntity> findAllByOrder_IdInOrderByCreatedAtAsc(Collection<Long> orderIds);
 }

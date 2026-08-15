@@ -28,4 +28,10 @@ class JpaCartRepository implements CartRepository {
 	public Optional<Cart> findActiveByCustomerId(Long customerId) {
 		return repository.findByCustomer_IdAndStatus(customerId, CartStatus.ACTIVE).map(CartPersistenceMapper::toDomain);
 	}
+
+	@Override
+	public Optional<Cart> findActiveByCustomerIdForUpdate(Long customerId) {
+		return repository.findWithLockByCustomer_IdAndStatus(customerId, CartStatus.ACTIVE)
+				.map(CartPersistenceMapper::toDomain);
+	}
 }

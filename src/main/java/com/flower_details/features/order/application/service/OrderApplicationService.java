@@ -51,7 +51,7 @@ public class OrderApplicationService {
 
 	@Transactional
 	public OrderView create(Long customerId, CreateOrderCommand command) {
-		Cart cart = findActiveCart(customerId);
+		Cart cart = findActiveCartForCheckout(customerId);
 		List<CartItem> cartItems = findCartItems(cart.id());
 		Map<Long, Product> availableProducts = findAvailableProducts(cartItems);
 
@@ -121,8 +121,8 @@ public class OrderApplicationService {
 		orderRepository.save(order);
 	}
 
-	private Cart findActiveCart(Long customerId) {
-		return cartRepository.findActiveByCustomerId(customerId)
+	private Cart findActiveCartForCheckout(Long customerId) {
+		return cartRepository.findActiveByCustomerIdForUpdate(customerId)
 				.orElseThrow(() -> new DomainException("El carrito esta vacio"));
 	}
 

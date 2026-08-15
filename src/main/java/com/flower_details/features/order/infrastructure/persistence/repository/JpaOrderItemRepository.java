@@ -30,7 +30,7 @@ class JpaOrderItemRepository implements OrderItemRepository {
 		if (orderIds.isEmpty()) {
 			return List.of();
 		}
-		return repository.findAllByOrderIdInOrderByCreatedAtAsc(orderIds).stream()
+		return repository.findAllByOrder_IdInOrderByCreatedAtAsc(orderIds).stream()
 				.map(OrderItemPersistenceMapper::toDomain)
 				.toList();
 	}

@@ -45,7 +45,7 @@ public class CartApplicationService {
 	public CartView addItem(Long customerId, AddCartItemCommand command) {
 		Product product = productRepository.findActiveById(command.productId())
 				.orElseThrow(() -> new CartProductUnavailableException(command.productId()));
-		Cart cart = cartRepository.findActiveByCustomerId(customerId)
+		Cart cart = cartRepository.findActiveByCustomerIdForUpdate(customerId)
 				.orElseGet(() -> cartRepository.save(Cart.create(customerId)));
 
 		cartItemRepository.findActiveByCartIdAndProductId(cart.id(), product.id())
@@ -62,7 +62,7 @@ public class CartApplicationService {
 
 	@Transactional
 	public CartView updateItem(Long customerId, UpdateCartItemCommand command) {
-		Cart cart = findActiveCart(customerId);
+		Cart cart = findActiveCartForUpdate(customerId);
 		CartItem item = cartItemRepository.findActiveByIdAndCartId(command.itemId(), cart.id())
 				.orElseThrow(() -> new CartItemNotFoundException(command.itemId()));
 		item.updateQuantity(command.quantity());
@@ -72,7 +72,7 @@ public class CartApplicationService {
 
 	@Transactional
 	public void deleteItem(Long customerId, Long itemId) {
-		Cart cart = findActiveCart(customerId);
+		Cart cart = findActiveCartForUpdate(customerId);
 		CartItem item = cartItemRepository.findActiveByIdAndCartId(itemId, cart.id())
 				.orElseThrow(() -> new CartItemNotFoundException(itemId));
 		cartItemRepository.delete(item);
@@ -80,12 +80,17 @@ public class CartApplicationService {
 
 	@Transactional
 	public void clearCart(Long customerId) {
-		cartRepository.findActiveByCustomerId(customerId)
+		cartRepository.findActiveByCustomerIdForUpdate(customerId)
 				.ifPresent(cart -> cartItemRepository.deleteAllActiveByCartId(cart.id()));
 	}
 
 	private Cart findActiveCart(Long customerId) {
 		return cartRepository.findActiveByCustomerId(customerId)
+				.orElseThrow(CartNotFoundException::new);
+	}
+
+	private Cart findActiveCartForUpdate(Long customerId) {
+		return cartRepository.findActiveByCustomerIdForUpdate(customerId)
 				.orElseThrow(CartNotFoundException::new);
 	}
 

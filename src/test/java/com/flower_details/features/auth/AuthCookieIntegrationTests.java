@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -78,5 +79,15 @@ class AuthCookieIntegrationTests {
 				.contains(ACCESS_COOKIE_NAME + "=")
 				.contains("Max-Age=0")
 				.contains("HttpOnly");
+	}
+
+	@Test
+	void corsAllowsPatchRequestsForOrderWorkflow() throws Exception {
+		mockMvc.perform(options("/api/orders/1/status")
+						.header(HttpHeaders.ORIGIN, "http://localhost:4200")
+						.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PATCH"))
+				.andExpect(status().isOk())
+				.andExpect(result -> assertThat(result.getResponse().getHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS))
+						.contains("PATCH"));
 	}
 }
