@@ -1,6 +1,7 @@
 package com.flower_details.features.auth.infrastructure.security;
 
 import jakarta.servlet.http.HttpServletResponse;
+import com.flower_details.shared.infrastructure.observability.RequestIdFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 
 @Configuration
 @EnableMethodSecurity
@@ -35,7 +37,8 @@ class SecurityConfig {
 	SecurityFilterChain securityFilterChain(
 			HttpSecurity http,
 			JwtAuthenticationFilter jwtAuthenticationFilter,
-			AuthenticationRateLimitFilter authenticationRateLimitFilter
+			AuthenticationRateLimitFilter authenticationRateLimitFilter,
+			RequestIdFilter requestIdFilter
 	)
 			throws Exception {
 		return http
@@ -58,6 +61,7 @@ class SecurityConfig {
 						})
 				)
 				.authorizeHttpRequests(authorize -> authorize
+						.requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
 						.requestMatchers(
 								HttpMethod.GET,
 								"/api/categories",
@@ -74,6 +78,7 @@ class SecurityConfig {
 						.requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
 						.anyRequest().authenticated()
 				)
+				.addFilterBefore(requestIdFilter, SecurityContextHolderFilter.class)
 				.addFilterBefore(authenticationRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.build();
@@ -84,7 +89,8 @@ class SecurityConfig {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(corsProperties.origins());
 		configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-		configuration.setAllowedHeaders(java.util.List.of("Content-Type", "X-XSRF-TOKEN", "Authorization"));
+		configuration.setAllowedHeaders(java.util.List.of("Content-Type", "X-XSRF-TOKEN", "Authorization", "X-Request-Id"));
+		configuration.setExposedHeaders(java.util.List.of("X-Request-Id"));
 		configuration.setAllowCredentials(true);
 		configuration.setMaxAge(3600L);
 
@@ -125,6 +131,13 @@ class SecurityConfig {
 			AuthenticationRateLimitFilter authenticationRateLimitFilter
 	) {
 		FilterRegistrationBean<AuthenticationRateLimitFilter> registration = new FilterRegistrationBean<>(authenticationRateLimitFilter);
+		registration.setEnabled(false);
+		return registration;
+	}
+
+	@Bean
+	FilterRegistrationBean<RequestIdFilter> requestIdFilterRegistration(RequestIdFilter requestIdFilter) {
+		FilterRegistrationBean<RequestIdFilter> registration = new FilterRegistrationBean<>(requestIdFilter);
 		registration.setEnabled(false);
 		return registration;
 	}

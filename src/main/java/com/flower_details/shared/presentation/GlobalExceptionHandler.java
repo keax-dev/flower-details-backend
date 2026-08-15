@@ -14,6 +14,7 @@ import com.flower_details.features.order.application.exception.OrderNotFoundExce
 import com.flower_details.features.users.application.exception.EmailAlreadyRegisteredException;
 import com.flower_details.features.users.application.exception.UserNotFoundException;
 import com.flower_details.shared.domain.DomainException;
+import com.flower_details.shared.infrastructure.observability.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -159,7 +160,7 @@ class GlobalExceptionHandler {
 			HttpServletRequest request
 	) {
 		return ResponseEntity.status(status)
-				.body(ApiErrorResponse.of(status.value(), error, message, request.getRequestURI()));
+				.body(ApiErrorResponse.of(status.value(), error, message, request.getRequestURI(), requestId(request)));
 	}
 
 	private static ResponseEntity<ApiErrorResponse> build(
@@ -175,7 +176,13 @@ class GlobalExceptionHandler {
 						error,
 						message,
 						request.getRequestURI(),
+						requestId(request),
 						validationErrors
 				));
+	}
+
+	private static String requestId(HttpServletRequest request) {
+		Object requestId = request.getAttribute(RequestIdFilter.REQUEST_ID_ATTRIBUTE);
+		return requestId instanceof String value ? value : null;
 	}
 }
