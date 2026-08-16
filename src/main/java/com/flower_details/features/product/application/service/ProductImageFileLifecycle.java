@@ -1,49 +1,8 @@
 package com.flower_details.features.product.application.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
+public interface ProductImageFileLifecycle {
 
-@Component
-@Slf4j
-@RequiredArgsConstructor
-class ProductImageFileLifecycle {
+	void deleteAfterCommit(String storedFileName);
 
-	private final ProductImageStorage productImageStorage;
-
-	void deleteAfterCommit(String storedFileName) {
-		register(storedFileName, true);
-	}
-
-	void deleteAfterRollback(String storedFileName) {
-		register(storedFileName, false);
-	}
-
-	private void register(String storedFileName, boolean afterCommit) {
-		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-			deleteQuietly(storedFileName);
-			return;
-		}
-
-		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-			@Override
-			public void afterCompletion(int status) {
-				boolean committed = status == STATUS_COMMITTED;
-				if (committed == afterCommit) {
-					deleteQuietly(storedFileName);
-				}
-			}
-		});
-	}
-
-	private void deleteQuietly(String storedFileName) {
-		try {
-			productImageStorage.delete(storedFileName);
-		}
-		catch (RuntimeException exception) {
-			log.error("No se pudo eliminar el archivo de imagen {}", storedFileName, exception);
-		}
-	}
+	void deleteAfterRollback(String storedFileName);
 }
