@@ -21,6 +21,7 @@ import com.flower_details.shared.domain.DomainException;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.domain.pagination.PageResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductApplicationService {
 
 	private final ProductRepository productRepository;
@@ -182,7 +184,9 @@ public class ProductApplicationService {
 			try {
 				productImageStorage.delete(storedFile.storedFileName());
 			}
-			catch (RuntimeException ignored) {
+			catch (RuntimeException exception) {
+				log.warn("No se pudo eliminar la imagen almacenada durante la limpieza: {}",
+						storedFile.storedFileName(), exception);
 			}
 		}
 	}

@@ -32,13 +32,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.Clock;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,6 +50,8 @@ public class OrderApplicationService {
 	private final OrderItemRepository orderItemRepository;
 	private final OrderAuditRepository orderAuditRepository;
 	private final UserRepository userRepository;
+	private final OrderNumberGenerator orderNumberGenerator;
+	private final Clock clock;
 
 	@Transactional
 	public OrderView create(Long customerId, CreateOrderCommand command) {
@@ -62,7 +60,7 @@ public class OrderApplicationService {
 		Map<Long, Product> availableProducts = findAvailableProducts(cartItems);
 
 		Order order = orderRepository.save(Order.create(
-				nextOrderNumber(),
+				orderNumberGenerator.next(),
 				customerId,
 				command.fulfillmentType(),
 				calculateTotal(cartItems),
@@ -109,7 +107,7 @@ public class OrderApplicationService {
 		ensureActiveOperator(operatorId);
 
 		OrderStatus previousStatus = order.status();
-		order.assignTo(operatorId, Instant.now());
+		order.assignTo(operatorId, clock.instant());
 		Order savedOrder = orderRepository.save(order);
 		recordAudit(savedOrder, requesterId, OrderAuditAction.ASSIGNED, previousStatus, "Operador asignado: " + operatorId);
 		return toView(savedOrder);
@@ -121,7 +119,7 @@ public class OrderApplicationService {
 		ensureCanManageOrder(order, requesterId, role);
 
 		OrderStatus previousStatus = order.status();
-		order.changeStatus(status, Instant.now());
+		order.changeStatus(status, clock.instant());
 		Order savedOrder = orderRepository.save(order);
 		recordAudit(savedOrder, requesterId, OrderAuditAction.STATUS_CHANGED, previousStatus, null);
 		return toView(savedOrder);
@@ -136,7 +134,7 @@ public class OrderApplicationService {
 		}
 
 		OrderStatus previousStatus = order.status();
-		order.cancel(reason, Instant.now());
+		order.cancel(reason, clock.instant());
 		Order savedOrder = orderRepository.save(order);
 		recordAudit(savedOrder, requesterId, OrderAuditAction.CANCELLED, previousStatus, reason);
 	}
@@ -225,7 +223,7 @@ public class OrderApplicationService {
 			String details
 	) {
 		orderAuditRepository.save(OrderAudit.create(
-				order.id(), actorUserId, action, previousStatus, order.status(), details, Instant.now()
+				order.id(), actorUserId, action, previousStatus, order.status(), details, clock.instant()
 		));
 	}
 
@@ -245,9 +243,4 @@ public class OrderApplicationService {
 		return page.map(order -> OrderView.from(order, itemsByOrderId.getOrDefault(order.id(), List.of())));
 	}
 
-	private String nextOrderNumber() {
-		String date = LocalDate.now(ZoneOffset.UTC).toString().replace("-", "");
-		String suffix = UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT);
-		return "FD-" + date + "-" + suffix;
-	}
 }

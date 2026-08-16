@@ -30,21 +30,41 @@ public class Order {
 	private Instant updatedAt;
 
 	private Order(
-			Long id, String orderNumber, Long customerId, Long assignedOperatorId, OrderStatus status,
-			FulfillmentType fulfillmentType, BigDecimal total, String contactName, String contactPhone,
-			String deliveryAddress, String additionalInstructions, String cancellationReason, Instant createdAt,
-			Instant assignedAt, Instant preparationStartedAt, Instant readyAt, Instant dispatchedAt,
-			Instant deliveredAt, Instant cancelledAt, Instant updatedAt, Long version
+			Long id,
+			String orderNumber,
+			Long customerId,
+			Long assignedOperatorId,
+			OrderStatus status,
+			FulfillmentType fulfillmentType,
+			BigDecimal total,
+			String contactName,
+			String contactPhone,
+			String deliveryAddress,
+			String additionalInstructions,
+			String cancellationReason,
+			Instant createdAt,
+			Instant assignedAt,
+			Instant preparationStartedAt,
+			Instant readyAt,
+			Instant dispatchedAt,
+			Instant deliveredAt,
+			Instant cancelledAt,
+			Instant updatedAt,
+			Long version
 	) {
 		this.id = id;
 		this.version = version;
 		this.orderNumber = requireText(orderNumber, "El numero de pedido es obligatorio", 40);
-		if (customerId == null) throw new DomainException("El cliente del pedido es obligatorio");
+		if (customerId == null) {
+			throw new DomainException("El cliente del pedido es obligatorio");
+		}
 		this.customerId = customerId;
 		this.assignedOperatorId = assignedOperatorId;
 		this.status = status == null ? OrderStatus.GENERATED : status;
 		this.fulfillmentType = fulfillmentType == null ? FulfillmentType.PICKUP : fulfillmentType;
-		if (total == null || total.signum() <= 0) throw new DomainException("El total del pedido debe ser mayor a cero");
+		if (total == null || total.signum() <= 0) {
+			throw new DomainException("El total del pedido debe ser mayor a cero");
+		}
 		this.total = total;
 		this.contactName = requireText(contactName, "El nombre de contacto es obligatorio", 160);
 		this.contactPhone = requireText(contactPhone, "El telefono de contacto es obligatorio", 30);
@@ -64,46 +84,126 @@ public class Order {
 		this.updatedAt = updatedAt;
 	}
 
-	public static Order create(String orderNumber, Long customerId, FulfillmentType fulfillmentType, BigDecimal total,
-			String contactName, String contactPhone, String deliveryAddress, String additionalInstructions) {
-		return new Order(null, orderNumber, customerId, null, OrderStatus.GENERATED, fulfillmentType, total,
-				contactName, contactPhone, deliveryAddress, additionalInstructions, null, null, null, null, null, null, null, null, null, null);
+	public static Order create(
+			String orderNumber,
+			Long customerId,
+			FulfillmentType fulfillmentType,
+			BigDecimal total,
+			String contactName,
+			String contactPhone,
+			String deliveryAddress,
+			String additionalInstructions
+	) {
+		return new Order(
+				null,
+				orderNumber,
+				customerId,
+				null,
+				OrderStatus.GENERATED,
+				fulfillmentType,
+				total,
+				contactName,
+				contactPhone,
+				deliveryAddress,
+				additionalInstructions,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null
+		);
 	}
 
-	public static Order restore(Long id, String orderNumber, Long customerId, Long assignedOperatorId, OrderStatus status,
-			FulfillmentType fulfillmentType, BigDecimal total, String contactName, String contactPhone, String deliveryAddress,
-			String additionalInstructions, String cancellationReason, Instant createdAt, Instant assignedAt,
-			Instant preparationStartedAt, Instant readyAt, Instant dispatchedAt, Instant deliveredAt, Instant cancelledAt,
-			Instant updatedAt, Long version) {
-		return new Order(id, orderNumber, customerId, assignedOperatorId, status, fulfillmentType, total, contactName,
-				contactPhone, deliveryAddress, additionalInstructions, cancellationReason, createdAt, assignedAt,
-				preparationStartedAt, readyAt, dispatchedAt, deliveredAt, cancelledAt, updatedAt, version);
+	public static Order restore(
+			Long id,
+			String orderNumber,
+			Long customerId,
+			Long assignedOperatorId,
+			OrderStatus status,
+			FulfillmentType fulfillmentType,
+			BigDecimal total,
+			String contactName,
+			String contactPhone,
+			String deliveryAddress,
+			String additionalInstructions,
+			String cancellationReason,
+			Instant createdAt,
+			Instant assignedAt,
+			Instant preparationStartedAt,
+			Instant readyAt,
+			Instant dispatchedAt,
+			Instant deliveredAt,
+			Instant cancelledAt,
+			Instant updatedAt,
+			Long version
+	) {
+		return new Order(
+				id,
+				orderNumber,
+				customerId,
+				assignedOperatorId,
+				status,
+				fulfillmentType,
+				total,
+				contactName,
+				contactPhone,
+				deliveryAddress,
+				additionalInstructions,
+				cancellationReason,
+				createdAt,
+				assignedAt,
+				preparationStartedAt,
+				readyAt,
+				dispatchedAt,
+				deliveredAt,
+				cancelledAt,
+				updatedAt,
+				version
+		);
 	}
 
 	public void assignTo(Long operatorId, Instant now) {
-		if (operatorId == null) throw new DomainException("El operador asignado es obligatorio");
+		if (operatorId == null) {
+			throw new DomainException("El operador asignado es obligatorio");
+		}
 		if (status != OrderStatus.GENERATED && status != OrderStatus.ASSIGNED) {
 			throw new DomainException("El pedido no puede asignarse en su estado actual");
 		}
 		assignedOperatorId = operatorId;
 		status = OrderStatus.ASSIGNED;
-		if (assignedAt == null) assignedAt = now;
+		if (assignedAt == null) {
+			assignedAt = now;
+		}
 	}
 
 	public void changeStatus(OrderStatus target, Instant now) {
-		if (target == null || target == OrderStatus.CANCELLED || target == OrderStatus.GENERATED || target == OrderStatus.ASSIGNED) {
+		if (target == null
+				|| target == OrderStatus.CANCELLED
+				|| target == OrderStatus.GENERATED
+				|| target == OrderStatus.ASSIGNED) {
 			throw new DomainException("El estado solicitado no puede aplicarse manualmente");
 		}
-		if (assignedOperatorId == null) throw new DomainException("El pedido debe estar asignado antes de avanzar");
+		if (assignedOperatorId == null) {
+			throw new DomainException("El pedido debe estar asignado antes de avanzar");
+		}
 		switch (target) {
 			case IN_PREPARATION -> transition(OrderStatus.ASSIGNED, target);
 			case READY_FOR_DELIVERY -> transition(OrderStatus.IN_PREPARATION, target);
 			case ON_THE_WAY -> {
-				if (fulfillmentType != FulfillmentType.DELIVERY) throw new DomainException("Solo pedidos con entrega pueden estar en camino");
+				if (fulfillmentType != FulfillmentType.DELIVERY) {
+					throw new DomainException("Solo pedidos con entrega pueden estar en camino");
+				}
 				transition(OrderStatus.READY_FOR_DELIVERY, target);
 			}
 			case DELIVERED -> {
-				OrderStatus required = fulfillmentType == FulfillmentType.DELIVERY ? OrderStatus.ON_THE_WAY : OrderStatus.READY_FOR_DELIVERY;
+				OrderStatus required = fulfillmentType == FulfillmentType.DELIVERY
+						? OrderStatus.ON_THE_WAY
+						: OrderStatus.READY_FOR_DELIVERY;
 				transition(required, target);
 			}
 			default -> throw new DomainException("Transicion de pedido invalida");
@@ -128,7 +228,9 @@ public class Order {
 	}
 
 	private void transition(OrderStatus expected, OrderStatus target) {
-		if (status != expected) throw new DomainException("El pedido debe estar en " + expected + " antes de pasar a " + target);
+		if (status != expected) {
+			throw new DomainException("El pedido debe estar en " + expected + " antes de pasar a " + target);
+		}
 	}
 
 	public Long id() {
@@ -217,14 +319,20 @@ public class Order {
 
 	private static String requireText(String value, String message, int maxLength) {
 		String normalized = normalizeOptional(value, maxLength);
-		if (normalized == null) throw new DomainException(message);
+		if (normalized == null) {
+			throw new DomainException(message);
+		}
 		return normalized;
 	}
 
 	private static String normalizeOptional(String value, int maxLength) {
-		if (value == null || value.isBlank()) return null;
+		if (value == null || value.isBlank()) {
+			return null;
+		}
 		String normalized = value.trim();
-		if (normalized.length() > maxLength) throw new DomainException("El texto supera el maximo de " + maxLength + " caracteres");
+		if (normalized.length() > maxLength) {
+			throw new DomainException("El texto supera el maximo de " + maxLength + " caracteres");
+		}
 		return normalized;
 	}
 }
