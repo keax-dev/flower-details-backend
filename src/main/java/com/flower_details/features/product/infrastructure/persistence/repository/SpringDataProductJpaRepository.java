@@ -2,6 +2,7 @@ package com.flower_details.features.product.infrastructure.persistence.repositor
 
 import com.flower_details.features.product.infrastructure.persistence.entity.ProductJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -9,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-interface SpringDataProductJpaRepository extends JpaRepository<ProductJpaEntity, Long> {
+interface SpringDataProductJpaRepository extends JpaRepository<ProductJpaEntity, Long>, JpaSpecificationExecutor<ProductJpaEntity> {
 
 	Optional<ProductJpaEntity> findById(Long id);
 
@@ -19,5 +20,4 @@ interface SpringDataProductJpaRepository extends JpaRepository<ProductJpaEntity,
 
 	List<ProductJpaEntity> findByIdInAndActiveTrueAndCategory_ActiveTrue(Collection<Long> ids);
 
-	Page<ProductJpaEntity> findAllByActiveTrueAndCategory_ActiveTrue(Pageable pageable);
 }

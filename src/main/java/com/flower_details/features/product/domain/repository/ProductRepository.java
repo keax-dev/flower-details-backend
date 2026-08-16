@@ -1,6 +1,7 @@
 package com.flower_details.features.product.domain.repository;
 
 import com.flower_details.features.product.domain.model.Product;
+import com.flower_details.features.product.domain.model.ProductSearchCriteria;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.domain.pagination.PageResult;
 
@@ -22,5 +23,5 @@ public interface ProductRepository {
 
 	List<Product> findActiveByIds(Collection<Long> ids);
 
-	PageResult<Product> findAllActive(PageRequest pageRequest);
+	PageResult<Product> search(ProductSearchCriteria criteria, PageRequest pageRequest);
 }

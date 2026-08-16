@@ -13,6 +13,7 @@ import com.flower_details.features.category.domain.repository.CategoryRepository
 import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.model.ProductImage;
+import com.flower_details.features.product.domain.model.ProductSearchCriteria;
 import com.flower_details.features.product.domain.repository.ProductImageRepository;
 import com.flower_details.features.product.domain.repository.ProductRepository;
 import com.flower_details.shared.domain.DomainException;
@@ -40,8 +41,8 @@ public class ProductApplicationService {
 	private final ProductImageFileLifecycle productImageFileLifecycle;
 
 	@Transactional(readOnly = true)
-	public PageResult<ProductView> listActiveProducts(PageRequest pageRequest) {
-		PageResult<Product> productPage = productRepository.findAllActive(pageRequest);
+	public PageResult<ProductView> listProducts(ProductSearchCriteria criteria, PageRequest pageRequest) {
+		PageResult<Product> productPage = productRepository.search(criteria, pageRequest);
 		List<Product> products = productPage.items();
 		Map<Long, Category> categoriesById = findCategoriesById(products.stream()
 				.map(Product::categoryId)

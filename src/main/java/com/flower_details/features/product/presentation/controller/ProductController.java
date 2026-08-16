@@ -2,6 +2,7 @@ package com.flower_details.features.product.presentation.controller;
 
 import com.flower_details.features.product.application.dto.storage.UploadFile;
 import com.flower_details.features.product.application.service.ProductApplicationService;
+import com.flower_details.features.product.domain.model.ProductSearchCriteria;
 import com.flower_details.features.product.presentation.dto.request.CreateProductRequest;
 import com.flower_details.features.product.presentation.dto.request.UpdateProductRequest;
 import com.flower_details.features.product.presentation.dto.response.ProductResponse;
@@ -10,8 +11,10 @@ import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.presentation.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 @Validated
 @RestController
@@ -42,10 +46,41 @@ class ProductController {
 	@GetMapping
 	PageResponse<ProductResponse> listProducts(
 			@RequestParam(defaultValue = "0") @PositiveOrZero(message = "La pagina no puede ser negativa") int page,
-			@RequestParam(defaultValue = "20") @Positive @Max(value = 100, message = "El tamano maximo es 100") int size
+			@RequestParam(defaultValue = "20") @Positive @Max(value = 100, message = "El tamano maximo es 100") int size,
+			@RequestParam(required = false) @Size(max = 120) String q,
+			@RequestParam(required = false) @Positive Long categoryId,
+			@RequestParam(required = false) @DecimalMin(value = "0.00") BigDecimal minPrice,
+			@RequestParam(required = false) @DecimalMin(value = "0.00") BigDecimal maxPrice,
+			@RequestParam(defaultValue = "createdAt") String sortBy,
+			@RequestParam(defaultValue = "desc") String direction
 	) {
 		return PageResponse.from(
-				productApplicationService.listActiveProducts(new PageRequest(page, size)),
+				productApplicationService.listProducts(
+						ProductSearchCriteria.forCatalog(q, categoryId, minPrice, maxPrice, sortBy, direction),
+						new PageRequest(page, size)
+				),
+				ProductResponse::from
+		);
+	}
+
+	@GetMapping("/manage")
+	@PreAuthorize("hasRole('ADMIN')")
+	PageResponse<ProductResponse> listProductsForManagement(
+			@RequestParam(defaultValue = "0") @PositiveOrZero(message = "La pagina no puede ser negativa") int page,
+			@RequestParam(defaultValue = "20") @Positive @Max(value = 100, message = "El tamano maximo es 100") int size,
+			@RequestParam(required = false) @Size(max = 120) String q,
+			@RequestParam(required = false) @Positive Long categoryId,
+			@RequestParam(required = false) @DecimalMin(value = "0.00") BigDecimal minPrice,
+			@RequestParam(required = false) @DecimalMin(value = "0.00") BigDecimal maxPrice,
+			@RequestParam(required = false) Boolean active,
+			@RequestParam(defaultValue = "createdAt") String sortBy,
+			@RequestParam(defaultValue = "desc") String direction
+	) {
+		return PageResponse.from(
+				productApplicationService.listProducts(
+						ProductSearchCriteria.forManagement(q, categoryId, minPrice, maxPrice, active, sortBy, direction),
+						new PageRequest(page, size)
+				),
 				ProductResponse::from
 		);
 	}

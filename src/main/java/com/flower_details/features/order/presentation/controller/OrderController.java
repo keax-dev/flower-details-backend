@@ -2,6 +2,9 @@ package com.flower_details.features.order.presentation.controller;
 
 import com.flower_details.features.auth.infrastructure.security.AuthenticatedUserPrincipal;
 import com.flower_details.features.order.application.service.OrderApplicationService;
+import com.flower_details.features.order.domain.model.FulfillmentType;
+import com.flower_details.features.order.domain.model.OrderSearchCriteria;
+import com.flower_details.features.order.domain.model.OrderStatus;
 import com.flower_details.features.order.presentation.dto.request.AssignOrderRequest;
 import com.flower_details.features.order.presentation.dto.request.CancelOrderRequest;
 import com.flower_details.features.order.presentation.dto.request.ChangeOrderStatusRequest;
@@ -27,8 +30,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.List;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -52,18 +57,40 @@ class OrderController {
 	PageResponse<OrderResponse> mine(
 			@AuthenticationPrincipal AuthenticatedUserPrincipal principal,
 			@RequestParam(defaultValue = "0") @PositiveOrZero int page,
-			@RequestParam(defaultValue = "20") @Positive @Max(100) int size
+			@RequestParam(defaultValue = "20") @Positive @Max(100) int size,
+			@RequestParam(required = false) String q,
+			@RequestParam(required = false) OrderStatus status,
+			@RequestParam(required = false) FulfillmentType fulfillmentType,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
+			@RequestParam(defaultValue = "createdAt") String sortBy,
+			@RequestParam(defaultValue = "desc") String direction
 	) {
-		return PageResponse.from(service.myOrders(principal.id(), new PageRequest(page, size)), OrderResponse::from);
+		return PageResponse.from(
+				service.myOrders(principal.id(), orderCriteria(q, null, null, status, fulfillmentType, createdFrom, createdTo, sortBy, direction), new PageRequest(page, size)),
+				OrderResponse::from
+		);
 	}
 
 	@GetMapping
 	@PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
 	PageResponse<OrderResponse> all(
 			@RequestParam(defaultValue = "0") @PositiveOrZero int page,
-			@RequestParam(defaultValue = "20") @Positive @Max(100) int size
+			@RequestParam(defaultValue = "20") @Positive @Max(100) int size,
+			@RequestParam(required = false) String q,
+			@RequestParam(required = false) @Positive Long customerId,
+			@RequestParam(required = false) @Positive Long operatorId,
+			@RequestParam(required = false) OrderStatus status,
+			@RequestParam(required = false) FulfillmentType fulfillmentType,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
+			@RequestParam(defaultValue = "createdAt") String sortBy,
+			@RequestParam(defaultValue = "desc") String direction
 	) {
-		return PageResponse.from(service.allOrders(new PageRequest(page, size)), OrderResponse::from);
+		return PageResponse.from(
+				service.allOrders(orderCriteria(q, customerId, operatorId, status, fulfillmentType, createdFrom, createdTo, sortBy, direction), new PageRequest(page, size)),
+				OrderResponse::from
+		);
 	}
 
 	@GetMapping("/{id}")
@@ -110,5 +137,21 @@ class OrderController {
 			@Valid @RequestBody CancelOrderRequest request
 	) {
 		service.cancel(id, principal.id(), principal.role(), request.reason());
+	}
+
+	private static OrderSearchCriteria orderCriteria(
+			String query,
+			Long customerId,
+			Long operatorId,
+			OrderStatus status,
+			FulfillmentType fulfillmentType,
+			LocalDate createdFrom,
+			LocalDate createdTo,
+			String sortBy,
+			String direction
+	) {
+		return OrderSearchCriteria.fromApi(
+				query, customerId, operatorId, status, fulfillmentType, createdFrom, createdTo, sortBy, direction
+		);
 	}
 }

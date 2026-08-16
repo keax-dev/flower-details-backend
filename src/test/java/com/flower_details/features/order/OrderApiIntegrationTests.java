@@ -88,6 +88,15 @@ class OrderApiIntegrationTests {
 		changeStatus(operatorCookie, csrfToken, orderId, "READY_FOR_DELIVERY");
 		changeStatus(operatorCookie, csrfToken, orderId, "DELIVERED");
 
+		mockMvc.perform(get("/api/orders/my")
+						.cookie(customerCookie)
+						.param("status", "DELIVERED")
+						.param("sortBy", "total")
+						.param("direction", "asc"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.items.length()").value(1))
+				.andExpect(jsonPath("$.items[0].id").value(orderId));
+
 		mockMvc.perform(get("/api/orders").cookie(operatorCookie))
 				.andExpect(status().isOk());
 		mockMvc.perform(get("/api/orders/{id}", orderId).cookie(operatorCookie))

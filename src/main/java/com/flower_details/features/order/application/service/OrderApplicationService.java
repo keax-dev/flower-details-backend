@@ -12,6 +12,7 @@ import com.flower_details.features.order.domain.model.OrderAudit;
 import com.flower_details.features.order.domain.model.OrderAuditAction;
 import com.flower_details.features.order.domain.model.Order;
 import com.flower_details.features.order.domain.model.OrderItem;
+import com.flower_details.features.order.domain.model.OrderSearchCriteria;
 import com.flower_details.features.order.domain.model.OrderStatus;
 import com.flower_details.features.order.domain.repository.OrderItemRepository;
 import com.flower_details.features.order.domain.repository.OrderAuditRepository;
@@ -78,13 +79,13 @@ public class OrderApplicationService {
 	}
 
 	@Transactional(readOnly = true)
-	public PageResult<OrderView> myOrders(Long customerId, PageRequest pageRequest) {
-		return toViews(orderRepository.findByCustomerId(customerId, pageRequest));
+	public PageResult<OrderView> myOrders(Long customerId, OrderSearchCriteria criteria, PageRequest pageRequest) {
+		return toViews(orderRepository.search(criteria.forCustomer(customerId), pageRequest));
 	}
 
 	@Transactional(readOnly = true)
-	public PageResult<OrderView> allOrders(PageRequest pageRequest) {
-		return toViews(orderRepository.findAll(pageRequest));
+	public PageResult<OrderView> allOrders(OrderSearchCriteria criteria, PageRequest pageRequest) {
+		return toViews(orderRepository.search(criteria, pageRequest));
 	}
 
 	@Transactional(readOnly = true)

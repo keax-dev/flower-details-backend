@@ -1,6 +1,7 @@
 package com.flower_details.features.product;
 
 import com.flower_details.features.category.domain.repository.CategoryRepository;
+import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.repository.ProductRepository;
 import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.users.domain.repository.PersonRepository;
@@ -174,6 +175,42 @@ class ProductIntegrationTests {
 								{"categoryId":1,"title":"Sin permiso","description":"No deberia crearse","price":10.00,"active":true}
 								"""))
 				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void publicCatalogFiltersActiveProductsAndAdminCanSearchInactiveProducts() throws Exception {
+		String suffix = UUID.randomUUID().toString();
+		Cookie adminCookie = createAdminAndLogin(suffix);
+		Category category = categoryRepository.save(Category.create("Filtros " + suffix, "Categoria de filtros", true));
+		Product visibleProduct = productRepository.save(Product.create(
+				category.id(), "Rosa roja " + suffix, "Ramo de rosas", new java.math.BigDecimal("25.00"), true
+		));
+		Product hiddenProduct = productRepository.save(Product.create(
+				category.id(), "Rosa oculta " + suffix, "Producto inactivo", new java.math.BigDecimal("10.00"), false
+		));
+
+		mockMvc.perform(get("/api/products")
+						.param("q", "Rosa roja " + suffix)
+						.param("categoryId", category.id().toString())
+						.param("minPrice", "20")
+						.param("maxPrice", "30")
+						.param("sortBy", "price")
+						.param("direction", "asc"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.items.length()").value(1))
+				.andExpect(jsonPath("$.items[0].id").value(visibleProduct.id()));
+
+		mockMvc.perform(get("/api/products").param("q", "Rosa oculta " + suffix))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.items").isEmpty());
+
+		mockMvc.perform(get("/api/products/manage")
+						.cookie(adminCookie)
+						.param("q", "Rosa oculta " + suffix)
+						.param("active", "false"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.items.length()").value(1))
+				.andExpect(jsonPath("$.items[0].id").value(hiddenProduct.id()));
 	}
 
 	@Test
