@@ -21,7 +21,10 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -96,6 +99,97 @@ class UserSoftDeleteIntegrationTests {
 								}
 								""".formatted(operatorEmail, password)))
 				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void adminCanCreateListDeactivateAndReactivateAnOperator() throws Exception {
+		String suffix = UUID.randomUUID().toString();
+		String adminEmail = "admin-" + suffix + "@flowerdetails.test";
+		String operatorEmail = "operator-" + suffix + "@flowerdetails.test";
+		String password = "Password123";
+
+		User admin = userRepository.save(User.createStaff(
+				adminEmail,
+				passwordService.hash(password),
+				UserRole.ADMIN
+		));
+		personRepository.save(Person.create(admin.id(), "Admin", "Demo", null, null));
+
+		Cookie adminCookie = login(admin.email(), password);
+		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
+
+		MvcResult createResult = mockMvc.perform(post("/api/users/operators")
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "names": "Operator",
+								  "lastNames": "Demo",
+								  "email": "%s",
+								  "password": "%s",
+								  "phone": "0999999999",
+								  "documentNumber": "DOC123"
+								}
+								""".formatted(operatorEmail, password)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.role").value("OPERATOR"))
+				.andExpect(jsonPath("$.active").value(true))
+				.andExpect(jsonPath("$.passwordHash").doesNotExist())
+				.andReturn();
+		Long operatorId = ((Number) com.jayway.jsonpath.JsonPath.read(
+				createResult.getResponse().getContentAsString(), "$.id"
+		)).longValue();
+
+		mockMvc.perform(get("/api/users").param("size", "1").cookie(adminCookie))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.items[?(@.id == %s)].email".formatted(operatorId)).value(operatorEmail));
+
+		mockMvc.perform(patch("/api/users/{id}/deactivate", operatorId)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.active").value(false));
+
+		mockMvc.perform(post("/api/auth/login")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"email":"%s","password":"%s"}
+								""".formatted(operatorEmail, password)))
+				.andExpect(status().isForbidden());
+
+		mockMvc.perform(patch("/api/users/{id}/activate", operatorId)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.active").value(true));
+
+		mockMvc.perform(post("/api/auth/login")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"email":"%s","password":"%s"}
+								""".formatted(operatorEmail, password)))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	void adminCannotDeactivateTheirOwnAccount() throws Exception {
+		String suffix = UUID.randomUUID().toString();
+		String password = "Password123";
+		User admin = userRepository.save(User.createStaff(
+				"admin-" + suffix + "@flowerdetails.test",
+				passwordService.hash(password),
+				UserRole.ADMIN
+		));
+		personRepository.save(Person.create(admin.id(), "Admin", "Demo", null, null));
+
+		Cookie adminCookie = login(admin.email(), password);
+		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
+
+		mockMvc.perform(patch("/api/users/{id}/deactivate", admin.id())
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isBadRequest());
 	}
 
 	private Cookie login(String email, String password) throws Exception {

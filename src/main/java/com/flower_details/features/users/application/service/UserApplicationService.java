@@ -88,6 +88,33 @@ public class UserApplicationService {
 		userRepository.delete(user);
 	}
 
+	@Transactional
+	public UserProfile activateUser(Long userId, Long requestedByUserId) {
+		return changeActivation(userId, requestedByUserId, true);
+	}
+
+	@Transactional
+	public UserProfile deactivateUser(Long userId, Long requestedByUserId) {
+		return changeActivation(userId, requestedByUserId, false);
+	}
+
+	private UserProfile changeActivation(Long userId, Long requestedByUserId, boolean active) {
+		if (Objects.equals(userId, requestedByUserId)) {
+			throw new DomainException("No puedes cambiar el estado de tu propio usuario");
+		}
+
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new UserNotFoundException(userId));
+		if (active) {
+			user.activate();
+		} else {
+			user.deactivate();
+		}
+
+		User updatedUser = userRepository.save(user);
+		return UserProfile.from(updatedUser, findPersonByUserId(updatedUser.id()));
+	}
+
 	private Person findPersonByUserId(Long userId) {
 		return personRepository.findByUserId(userId)
 				.orElseThrow(() -> new UserNotFoundException(userId));
