@@ -2,6 +2,7 @@ package com.flower_details.features.product.presentation.controller;
 
 import com.flower_details.features.product.application.dto.storage.UploadFile;
 import com.flower_details.features.product.application.dto.query.ProductSearchQuery;
+import com.flower_details.features.product.application.service.ProductImageApplicationService;
 import com.flower_details.features.product.application.service.ProductApplicationService;
 import com.flower_details.features.product.presentation.dto.request.CreateProductRequest;
 import com.flower_details.features.product.presentation.dto.request.UpdateProductRequest;
@@ -42,6 +43,7 @@ import java.math.BigDecimal;
 class ProductController {
 
 	private final ProductApplicationService productApplicationService;
+	private final ProductImageApplicationService productImageApplicationService;
 
 	@GetMapping
 	PageResponse<ProductResponse> listProducts(
@@ -113,7 +115,7 @@ class ProductController {
 			@PathVariable Long id,
 			@RequestParam(name = "images") List<MultipartFile> images
 	) {
-		return ProductResponse.from(productApplicationService.addProductImages(id, toUploadFiles(images)));
+		return ProductResponse.from(productImageApplicationService.addProductImages(id, toUploadFiles(images)));
 	}
 
 	@DeleteMapping("/{id}")
