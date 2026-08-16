@@ -9,6 +9,8 @@ import com.flower_details.features.cart.domain.repository.CartItemRepository;
 import com.flower_details.features.cart.domain.repository.CartRepository;
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.repository.ProductRepository;
+import com.flower_details.features.users.domain.repository.UserRepository;
+import com.flower_details.shared.domain.DomainException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +22,13 @@ public class AddCartItemUseCase {
 	private final CartRepository cartRepository;
 	private final CartItemRepository cartItemRepository;
 	private final ProductRepository productRepository;
+	private final UserRepository userRepository;
 	private final CartViewAssembler cartViewAssembler;
 
 	@Transactional
 	public CartView execute(Long customerId, AddCartItemCommand command) {
+		userRepository.findByIdForUpdate(customerId)
+				.orElseThrow(() -> new DomainException("El cliente no existe"));
 		Product product = productRepository.findActiveById(command.productId())
 				.orElseThrow(() -> new CartProductUnavailableException(command.productId()));
 		Cart cart = cartRepository.findActiveByCustomerIdForUpdate(customerId)

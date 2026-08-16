@@ -93,6 +93,12 @@ class ProductController {
 		);
 	}
 
+	@GetMapping("/manage/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	ProductResponse getProductForManagement(@PathVariable Long id) {
+		return ProductResponse.from(retrieveProductsUseCase.manageById(id));
+	}
+
 	@GetMapping("/{id}")
 	ProductResponse getProduct(@PathVariable Long id) {
 		return ProductResponse.from(retrieveProductsUseCase.byId(id));

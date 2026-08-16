@@ -156,15 +156,18 @@ class ProductIntegrationTests {
 						.header(csrfToken.headerName(), csrfToken.token()))
 				.andExpect(status().isNoContent());
 
-		assertThat(productRepository.findById(productId)).isEmpty();
+		assertThat(productRepository.findById(productId)).isPresent()
+				.get()
+				.extracting(Product::active)
+				.isEqualTo(false);
 		assertThat(countProductRowsById(productId)).isEqualTo(1L);
-		assertThat(countSoftDeletedProductRowsById(productId)).isEqualTo(1L);
-		assertThat(countSoftDeletedImageRowsByProductId(productId)).isGreaterThanOrEqualTo(2L);
+		assertThat(countActiveImageRowsByProductId(productId)).isGreaterThanOrEqualTo(2L);
 
 		mockMvc.perform(get("/api/products/{id}", productId))
 				.andExpect(status().isNotFound());
 		mockMvc.perform(get(secondImageUrl))
-				.andExpect(status().isNotFound());
+				.andExpect(status().isOk())
+				.andExpect(result -> assertThat(result.getResponse().getContentAsByteArray()).isEqualTo(SECOND_IMAGE));
 	}
 
 	@Test
@@ -211,6 +214,11 @@ class ProductIntegrationTests {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.items.length()").value(1))
 				.andExpect(jsonPath("$.items[0].id").value(hiddenProduct.id()));
+
+		mockMvc.perform(get("/api/products/manage/{id}", hiddenProduct.id()).cookie(adminCookie))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(hiddenProduct.id()))
+				.andExpect(jsonPath("$.active").value(false));
 	}
 
 	@Test
@@ -295,17 +303,9 @@ class ProductIntegrationTests {
 		return jdbcTemplate.queryForObject("select count(*) from products where id = ?", Long.class, id);
 	}
 
-	private Long countSoftDeletedProductRowsById(Long id) {
+	private Long countActiveImageRowsByProductId(Long productId) {
 		return jdbcTemplate.queryForObject(
-				"select count(*) from products where id = ? and deleted_at is not null",
-				Long.class,
-				id
-		);
-	}
-
-	private Long countSoftDeletedImageRowsByProductId(Long productId) {
-		return jdbcTemplate.queryForObject(
-				"select count(*) from product_images where product_id = ? and deleted_at is not null",
+				"select count(*) from product_images where product_id = ? and deleted_at is null",
 				Long.class,
 				productId
 		);

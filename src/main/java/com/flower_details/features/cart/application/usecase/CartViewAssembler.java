@@ -3,7 +3,6 @@ package com.flower_details.features.cart.application.usecase;
 import com.flower_details.features.cart.application.dto.view.CartItemView;
 import com.flower_details.features.cart.application.dto.view.CartProductView;
 import com.flower_details.features.cart.application.dto.view.CartView;
-import com.flower_details.features.cart.application.exception.CartProductUnavailableException;
 import com.flower_details.features.cart.domain.model.Cart;
 import com.flower_details.features.cart.domain.model.CartItem;
 import com.flower_details.features.cart.domain.repository.CartItemRepository;
@@ -32,16 +31,16 @@ class CartViewAssembler {
 		if (items.isEmpty()) {
 			return CartView.from(cart, List.of());
 		}
-		Map<Long, Product> productsById = productRepository.findByIds(items.stream().map(CartItem::productId).toList())
+		Map<Long, Product> productsById = productRepository.findActiveByIds(items.stream().map(CartItem::productId).toList())
 				.stream().collect(Collectors.toMap(Product::id, Function.identity()));
 		Map<Long, ProductImage> primaryImages = productImageRepository.findActiveByProductIds(productsById.keySet())
 				.stream().collect(Collectors.toMap(ProductImage::productId, Function.identity(), (first, ignored) -> first));
 		return CartView.from(cart, items.stream().map(item -> {
 			Product product = productsById.get(item.productId());
-			if (product == null) {
-				throw new CartProductUnavailableException(item.productId());
-			}
-			return CartItemView.from(item, CartProductView.from(product, primaryImages.get(product.id())));
+			CartProductView productView = product == null
+					? CartProductView.unavailable(item.productId())
+					: CartProductView.from(product, primaryImages.get(product.id()));
+			return CartItemView.from(item, productView);
 		}).toList());
 	}
 }

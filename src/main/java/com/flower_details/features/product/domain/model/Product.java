@@ -76,6 +76,10 @@ public class Product {
 		this.active = active;
 	}
 
+	public void deactivate() {
+		active = false;
+	}
+
 	public Long id() {
 		return id;
 	}

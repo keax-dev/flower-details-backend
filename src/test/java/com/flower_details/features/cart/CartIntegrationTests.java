@@ -100,6 +100,39 @@ class CartIntegrationTests {
 				.andExpect(status().isUnauthorized());
 	}
 
+	@Test
+	void customerCanRemoveAProductThatIsNoLongerAvailable() throws Exception {
+		String suffix = UUID.randomUUID().toString();
+		Cookie customerCookie = registerCustomer(suffix);
+		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
+		Category category = categoryRepository.save(Category.create("No disponible " + suffix, "Categoria de carrito", true));
+		Product product = productRepository.save(Product.create(
+				category.id(), "Ramo agotado " + suffix, "Detalle para el carrito", new BigDecimal("29.90"), true
+		));
+
+		MvcResult addResult = mockMvc.perform(post("/api/cart/items")
+						.cookie(customerCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{\"productId\":%d,\"quantity\":1}".formatted(product.id())))
+				.andExpect(status().isCreated())
+				.andReturn();
+
+		Long itemId = readLong(addResult, "$.items[0].id");
+		product.deactivate();
+		productRepository.save(product);
+
+		mockMvc.perform(get("/api/cart").cookie(customerCookie))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.items[0].product.id").value(product.id()))
+				.andExpect(jsonPath("$.items[0].product.available").value(false));
+
+		mockMvc.perform(delete("/api/cart/items/{itemId}", itemId)
+						.cookie(customerCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isNoContent());
+	}
+
 	private Cookie registerCustomer(String suffix) throws Exception {
 		String email = "cart-" + suffix + "@flowerdetails.test";
 		MvcResult result = mockMvc.perform(post("/api/auth/register")

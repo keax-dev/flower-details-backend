@@ -37,6 +37,11 @@ class JpaUserRepository implements UserRepository {
 	}
 
 	@Override
+	public Optional<User> findByIdForUpdate(Long id) {
+		return repository.findWithLockById(id).map(UserPersistenceMapper::toDomain);
+	}
+
+	@Override
 	public Optional<User> findByEmail(String email) {
 		return repository.findByEmail(normalizeEmail(email)).map(UserPersistenceMapper::toDomain);
 	}

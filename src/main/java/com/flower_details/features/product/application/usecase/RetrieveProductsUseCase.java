@@ -47,6 +47,16 @@ public class RetrieveProductsUseCase {
 	@Transactional(readOnly = true)
 	public ProductView byId(Long id) {
 		Product product = productRepository.findActiveById(id).orElseThrow(() -> new ProductNotFoundException(id));
+		return toView(product);
+	}
+
+	@Transactional(readOnly = true)
+	public ProductView manageById(Long id) {
+		Product product = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+		return toView(product);
+	}
+
+	private ProductView toView(Product product) {
 		Category category = categoryRepository.findById(product.categoryId())
 				.orElseThrow(() -> new CategoryNotFoundException(product.categoryId()));
 		return ProductView.from(product, category, productImageRepository.findActiveByProductId(product.id()));
@@ -55,8 +65,6 @@ public class RetrieveProductsUseCase {
 	@Transactional(readOnly = true)
 	public StoredFileContent imageFile(String storedFileName) {
 		ProductImage image = productImageRepository.findActiveByStoredFileName(storedFileName)
-				.orElseThrow(() -> new ProductImageNotFoundException(storedFileName));
-		productRepository.findActiveById(image.productId())
 				.orElseThrow(() -> new ProductImageNotFoundException(storedFileName));
 		return productImageStorage.load(image.storedFileName());
 	}
