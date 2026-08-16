@@ -13,7 +13,6 @@ import com.flower_details.features.product.domain.model.ProductImage;
 import com.flower_details.features.product.domain.model.ProductSearchCriteria;
 import com.flower_details.features.product.domain.repository.ProductImageRepository;
 import com.flower_details.features.product.domain.repository.ProductRepository;
-import com.flower_details.shared.domain.DomainException;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.domain.pagination.PageResult;
 import lombok.RequiredArgsConstructor;

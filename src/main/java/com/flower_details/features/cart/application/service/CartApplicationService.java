@@ -84,11 +84,6 @@ public class CartApplicationService {
 				.ifPresent(cart -> cartItemRepository.deleteAllActiveByCartId(cart.id()));
 	}
 
-	private Cart findActiveCart(Long customerId) {
-		return cartRepository.findActiveByCustomerId(customerId)
-				.orElseThrow(CartNotFoundException::new);
-	}
-
 	private Cart findActiveCartForUpdate(Long customerId) {
 		return cartRepository.findActiveByCustomerIdForUpdate(customerId)
 				.orElseThrow(CartNotFoundException::new);

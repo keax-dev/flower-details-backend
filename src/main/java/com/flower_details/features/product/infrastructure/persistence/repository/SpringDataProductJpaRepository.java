@@ -3,8 +3,6 @@ package com.flower_details.features.product.infrastructure.persistence.repositor
 import com.flower_details.features.product.infrastructure.persistence.entity.ProductJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.Collection;
 import java.util.List;
