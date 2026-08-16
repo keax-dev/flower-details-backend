@@ -1,4 +1,4 @@
-package com.flower_details.features.cart.application.usecase;
+package com.flower_details.features.cart.application.assembler;
 
 import com.flower_details.features.cart.application.dto.view.CartItemView;
 import com.flower_details.features.cart.application.dto.view.CartProductView;
@@ -20,13 +20,13 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-class CartViewAssembler {
+public class CartViewAssembler {
 
 	private final CartItemRepository cartItemRepository;
 	private final ProductRepository productRepository;
 	private final ProductImageRepository productImageRepository;
 
-	CartView from(Cart cart) {
+	public CartView from(Cart cart) {
 		List<CartItem> items = cartItemRepository.findActiveByCartId(cart.id());
 		if (items.isEmpty()) {
 			return CartView.from(cart, List.of());
