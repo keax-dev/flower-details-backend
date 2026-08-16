@@ -2,6 +2,7 @@ package com.flower_details.features.product.application.service;
 
 import com.flower_details.features.product.application.dto.command.CreateProductCommand;
 import com.flower_details.features.product.application.dto.command.UpdateProductCommand;
+import com.flower_details.features.product.application.dto.query.ProductSearchQuery;
 import com.flower_details.features.product.application.dto.storage.StoredFile;
 import com.flower_details.features.product.application.dto.storage.StoredFileContent;
 import com.flower_details.features.product.application.dto.storage.UploadFile;
@@ -41,7 +42,8 @@ public class ProductApplicationService {
 	private final ProductImageFileLifecycle productImageFileLifecycle;
 
 	@Transactional(readOnly = true)
-	public PageResult<ProductView> listProducts(ProductSearchCriteria criteria, PageRequest pageRequest) {
+	public PageResult<ProductView> listProducts(ProductSearchQuery query, PageRequest pageRequest) {
+		ProductSearchCriteria criteria = query.toCriteria();
 		PageResult<Product> productPage = productRepository.search(criteria, pageRequest);
 		List<Product> products = productPage.items();
 		Map<Long, Category> categoriesById = findCategoriesById(products.stream()

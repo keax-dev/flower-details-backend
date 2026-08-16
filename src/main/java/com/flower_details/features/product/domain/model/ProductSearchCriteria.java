@@ -28,24 +28,6 @@ public record ProductSearchCriteria(
 		sortDirection = sortDirection == null ? SortDirection.DESC : sortDirection;
 	}
 
-	public static ProductSearchCriteria forCatalog(
-			String query, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, String sortBy, String direction
-	) {
-		return new ProductSearchCriteria(
-				query, categoryId, minPrice, maxPrice, Boolean.TRUE,
-				ProductSortField.fromApiValue(sortBy), SortDirection.fromApiValue(direction), true
-		);
-	}
-
-	public static ProductSearchCriteria forManagement(
-			String query, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Boolean active, String sortBy, String direction
-	) {
-		return new ProductSearchCriteria(
-				query, categoryId, minPrice, maxPrice, active,
-				ProductSortField.fromApiValue(sortBy), SortDirection.fromApiValue(direction), false
-		);
-	}
-
 	private static String normalizeQuery(String value) {
 		if (value == null || value.isBlank()) return null;
 		String normalized = value.trim();

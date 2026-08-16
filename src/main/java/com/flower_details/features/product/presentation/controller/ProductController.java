@@ -1,8 +1,8 @@
 package com.flower_details.features.product.presentation.controller;
 
 import com.flower_details.features.product.application.dto.storage.UploadFile;
+import com.flower_details.features.product.application.dto.query.ProductSearchQuery;
 import com.flower_details.features.product.application.service.ProductApplicationService;
-import com.flower_details.features.product.domain.model.ProductSearchCriteria;
 import com.flower_details.features.product.presentation.dto.request.CreateProductRequest;
 import com.flower_details.features.product.presentation.dto.request.UpdateProductRequest;
 import com.flower_details.features.product.presentation.dto.response.ProductResponse;
@@ -56,7 +56,7 @@ class ProductController {
 	) {
 		return PageResponse.from(
 				productApplicationService.listProducts(
-						ProductSearchCriteria.forCatalog(q, categoryId, minPrice, maxPrice, sortBy, direction),
+						ProductSearchQuery.forCatalog(q, categoryId, minPrice, maxPrice, sortBy, direction),
 						new PageRequest(page, size)
 				),
 				ProductResponse::from
@@ -78,7 +78,7 @@ class ProductController {
 	) {
 		return PageResponse.from(
 				productApplicationService.listProducts(
-						ProductSearchCriteria.forManagement(q, categoryId, minPrice, maxPrice, active, sortBy, direction),
+						ProductSearchQuery.forManagement(q, categoryId, minPrice, maxPrice, active, sortBy, direction),
 						new PageRequest(page, size)
 				),
 				ProductResponse::from

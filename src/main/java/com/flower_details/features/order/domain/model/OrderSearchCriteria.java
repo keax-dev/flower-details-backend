@@ -28,29 +28,6 @@ public record OrderSearchCriteria(
 		sortDirection = sortDirection == null ? SortDirection.DESC : sortDirection;
 	}
 
-	public static OrderSearchCriteria fromApi(
-			String query,
-			Long customerId,
-			Long operatorId,
-			OrderStatus status,
-			FulfillmentType fulfillmentType,
-			LocalDate createdFrom,
-			LocalDate createdTo,
-			String sortBy,
-			String direction
-	) {
-		return new OrderSearchCriteria(
-				query, customerId, operatorId, status, fulfillmentType, createdFrom, createdTo,
-				OrderSortField.fromApiValue(sortBy), SortDirection.fromApiValue(direction)
-		);
-	}
-
-	public OrderSearchCriteria forCustomer(Long customerId) {
-		return new OrderSearchCriteria(
-				query, customerId, operatorId, status, fulfillmentType, createdFrom, createdTo, sortField, sortDirection
-		);
-	}
-
 	private static String normalizeQuery(String value) {
 		if (value == null || value.isBlank()) return null;
 		String normalized = value.trim();

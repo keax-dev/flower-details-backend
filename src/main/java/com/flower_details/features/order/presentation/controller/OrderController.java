@@ -1,9 +1,9 @@
 package com.flower_details.features.order.presentation.controller;
 
 import com.flower_details.features.auth.infrastructure.security.identity.AuthenticatedUserPrincipal;
+import com.flower_details.features.order.application.dto.query.OrderSearchQuery;
 import com.flower_details.features.order.application.service.OrderApplicationService;
 import com.flower_details.features.order.domain.model.FulfillmentType;
-import com.flower_details.features.order.domain.model.OrderSearchCriteria;
 import com.flower_details.features.order.domain.model.OrderStatus;
 import com.flower_details.features.order.presentation.dto.request.AssignOrderRequest;
 import com.flower_details.features.order.presentation.dto.request.CancelOrderRequest;
@@ -139,7 +139,7 @@ class OrderController {
 		service.cancel(id, principal.id(), principal.role(), request.reason());
 	}
 
-	private static OrderSearchCriteria orderCriteria(
+	private static OrderSearchQuery orderCriteria(
 			String query,
 			Long customerId,
 			Long operatorId,
@@ -150,7 +150,7 @@ class OrderController {
 			String sortBy,
 			String direction
 	) {
-		return OrderSearchCriteria.fromApi(
+		return new OrderSearchQuery(
 				query, customerId, operatorId, status, fulfillmentType, createdFrom, createdTo, sortBy, direction
 		);
 	}

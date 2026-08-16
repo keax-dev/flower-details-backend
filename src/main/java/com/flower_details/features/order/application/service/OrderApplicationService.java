@@ -5,6 +5,7 @@ import com.flower_details.features.cart.domain.model.CartItem;
 import com.flower_details.features.cart.domain.repository.CartItemRepository;
 import com.flower_details.features.cart.domain.repository.CartRepository;
 import com.flower_details.features.order.application.dto.command.CreateOrderCommand;
+import com.flower_details.features.order.application.dto.query.OrderSearchQuery;
 import com.flower_details.features.order.application.dto.view.OrderAuditView;
 import com.flower_details.features.order.application.dto.view.OrderView;
 import com.flower_details.features.order.application.exception.OrderNotFoundException;
@@ -12,7 +13,6 @@ import com.flower_details.features.order.domain.model.OrderAudit;
 import com.flower_details.features.order.domain.model.OrderAuditAction;
 import com.flower_details.features.order.domain.model.Order;
 import com.flower_details.features.order.domain.model.OrderItem;
-import com.flower_details.features.order.domain.model.OrderSearchCriteria;
 import com.flower_details.features.order.domain.model.OrderStatus;
 import com.flower_details.features.order.domain.repository.OrderItemRepository;
 import com.flower_details.features.order.domain.repository.OrderAuditRepository;
@@ -79,13 +79,13 @@ public class OrderApplicationService {
 	}
 
 	@Transactional(readOnly = true)
-	public PageResult<OrderView> myOrders(Long customerId, OrderSearchCriteria criteria, PageRequest pageRequest) {
-		return toViews(orderRepository.search(criteria.forCustomer(customerId), pageRequest));
+	public PageResult<OrderView> myOrders(Long customerId, OrderSearchQuery query, PageRequest pageRequest) {
+		return toViews(orderRepository.search(query.toCriteriaForCustomer(customerId), pageRequest));
 	}
 
 	@Transactional(readOnly = true)
-	public PageResult<OrderView> allOrders(OrderSearchCriteria criteria, PageRequest pageRequest) {
-		return toViews(orderRepository.search(criteria, pageRequest));
+	public PageResult<OrderView> allOrders(OrderSearchQuery query, PageRequest pageRequest) {
+		return toViews(orderRepository.search(query.toCriteria(), pageRequest));
 	}
 
 	@Transactional(readOnly = true)
