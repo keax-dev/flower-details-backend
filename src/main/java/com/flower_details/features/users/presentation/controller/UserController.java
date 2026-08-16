@@ -1,6 +1,6 @@
 package com.flower_details.features.users.presentation.controller;
 
-import com.flower_details.features.auth.infrastructure.security.identity.AuthenticatedUserPrincipal;
+import com.flower_details.features.auth.application.security.AuthenticatedUser;
 import com.flower_details.features.users.application.service.UserApplicationService;
 import com.flower_details.features.users.presentation.dto.request.CreateOperatorRequest;
 import com.flower_details.features.users.presentation.dto.response.UserResponse;
@@ -33,7 +33,7 @@ class UserController {
 	private final UserApplicationService userApplicationService;
 
 	@GetMapping("/api/me")
-	UserResponse me(@AuthenticationPrincipal AuthenticatedUserPrincipal principal) {
+	UserResponse me(@AuthenticationPrincipal AuthenticatedUser principal) {
 		return UserResponse.from(userApplicationService.getById(principal.id()));
 	}
 
@@ -60,7 +60,7 @@ class UserController {
 	@PreAuthorize("hasRole('ADMIN')")
 	UserResponse activateUser(
 			@PathVariable Long id,
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal
+			@AuthenticationPrincipal AuthenticatedUser principal
 	) {
 		return UserResponse.from(userApplicationService.activateUser(id, principal.id()));
 	}
@@ -69,7 +69,7 @@ class UserController {
 	@PreAuthorize("hasRole('ADMIN')")
 	UserResponse deactivateUser(
 			@PathVariable Long id,
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal
+			@AuthenticationPrincipal AuthenticatedUser principal
 	) {
 		return UserResponse.from(userApplicationService.deactivateUser(id, principal.id()));
 	}
@@ -79,7 +79,7 @@ class UserController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void deleteUser(
 			@PathVariable Long id,
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal
+			@AuthenticationPrincipal AuthenticatedUser principal
 	) {
 		userApplicationService.deleteUser(id, principal.id());
 	}

@@ -1,6 +1,6 @@
 package com.flower_details.features.cart.presentation.controller;
 
-import com.flower_details.features.auth.infrastructure.security.identity.AuthenticatedUserPrincipal;
+import com.flower_details.features.auth.application.security.AuthenticatedUser;
 import com.flower_details.features.cart.application.service.CartApplicationService;
 import com.flower_details.features.cart.presentation.dto.request.AddCartItemRequest;
 import com.flower_details.features.cart.presentation.dto.request.UpdateCartItemRequest;
@@ -29,14 +29,14 @@ class CartController {
 	private final CartApplicationService cartApplicationService;
 
 	@GetMapping
-	CartResponse getCart(@AuthenticationPrincipal AuthenticatedUserPrincipal principal) {
+	CartResponse getCart(@AuthenticationPrincipal AuthenticatedUser principal) {
 		return CartResponse.from(cartApplicationService.getCart(principal.id()));
 	}
 
 	@PostMapping("/items")
 	@ResponseStatus(HttpStatus.CREATED)
 	CartResponse addItem(
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal,
+			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody AddCartItemRequest request
 	) {
 		return CartResponse.from(cartApplicationService.addItem(principal.id(), request.toCommand()));
@@ -44,7 +44,7 @@ class CartController {
 
 	@PutMapping("/items/{itemId}")
 	CartResponse updateItem(
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal,
+			@AuthenticationPrincipal AuthenticatedUser principal,
 			@PathVariable Long itemId,
 			@Valid @RequestBody UpdateCartItemRequest request
 	) {
@@ -53,13 +53,13 @@ class CartController {
 
 	@DeleteMapping("/items/{itemId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	void deleteItem(@AuthenticationPrincipal AuthenticatedUserPrincipal principal, @PathVariable Long itemId) {
+	void deleteItem(@AuthenticationPrincipal AuthenticatedUser principal, @PathVariable Long itemId) {
 		cartApplicationService.deleteItem(principal.id(), itemId);
 	}
 
 	@DeleteMapping("/items")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	void clearCart(@AuthenticationPrincipal AuthenticatedUserPrincipal principal) {
+	void clearCart(@AuthenticationPrincipal AuthenticatedUser principal) {
 		cartApplicationService.clearCart(principal.id());
 	}
 }

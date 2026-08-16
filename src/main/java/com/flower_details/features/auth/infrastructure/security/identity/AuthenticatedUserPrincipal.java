@@ -1,5 +1,6 @@
 package com.flower_details.features.auth.infrastructure.security.identity;
 
+import com.flower_details.features.auth.application.security.AuthenticatedUser;
 import com.flower_details.features.users.domain.model.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class AuthenticatedUserPrincipal implements UserDetails {
+public class AuthenticatedUserPrincipal implements UserDetails, AuthenticatedUser {
 
 	private final Long id;
 	private final String email;

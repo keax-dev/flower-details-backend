@@ -1,6 +1,6 @@
 package com.flower_details.features.order.presentation.controller;
 
-import com.flower_details.features.auth.infrastructure.security.identity.AuthenticatedUserPrincipal;
+import com.flower_details.features.auth.application.security.AuthenticatedUser;
 import com.flower_details.features.order.application.dto.query.OrderSearchQuery;
 import com.flower_details.features.order.application.service.OrderApplicationService;
 import com.flower_details.features.order.domain.model.FulfillmentType;
@@ -46,7 +46,7 @@ class OrderController {
 	@PreAuthorize("hasRole('CUSTOMER')")
 	@ResponseStatus(HttpStatus.CREATED)
 	OrderResponse create(
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal,
+			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody CreateOrderRequest request
 	) {
 		return OrderResponse.from(service.create(principal.id(), request.toCommand()));
@@ -55,7 +55,7 @@ class OrderController {
 	@GetMapping("/my")
 	@PreAuthorize("hasRole('CUSTOMER')")
 	PageResponse<OrderResponse> mine(
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal,
+			@AuthenticationPrincipal AuthenticatedUser principal,
 			@RequestParam(defaultValue = "0") @PositiveOrZero int page,
 			@RequestParam(defaultValue = "20") @Positive @Max(100) int size,
 			@RequestParam(required = false) String q,
@@ -95,7 +95,7 @@ class OrderController {
 
 	@GetMapping("/{id}")
 	@PreAuthorize("hasAnyRole('CUSTOMER','ADMIN','OPERATOR')")
-	OrderResponse get(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUserPrincipal principal) {
+	OrderResponse get(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser principal) {
 		return OrderResponse.from(service.get(id, principal.id(), principal.role()));
 	}
 
@@ -103,7 +103,7 @@ class OrderController {
 	@PreAuthorize("hasAnyRole('CUSTOMER','ADMIN','OPERATOR')")
 	List<OrderAuditResponse> auditTrail(
 			@PathVariable Long id,
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal
+			@AuthenticationPrincipal AuthenticatedUser principal
 	) {
 		return service.auditTrail(id, principal.id(), principal.role()).stream().map(OrderAuditResponse::from).toList();
 	}
@@ -112,7 +112,7 @@ class OrderController {
 	@PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
 	OrderResponse assign(
 			@PathVariable Long id,
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal,
+			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody AssignOrderRequest request
 	) {
 		return OrderResponse.from(service.assign(id, principal.id(), principal.role(), request.operatorId()));
@@ -122,7 +122,7 @@ class OrderController {
 	@PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
 	OrderResponse changeStatus(
 			@PathVariable Long id,
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal,
+			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody ChangeOrderStatusRequest request
 	) {
 		return OrderResponse.from(service.changeStatus(id, principal.id(), principal.role(), request.status()));
@@ -133,7 +133,7 @@ class OrderController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void cancel(
 			@PathVariable Long id,
-			@AuthenticationPrincipal AuthenticatedUserPrincipal principal,
+			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody CancelOrderRequest request
 	) {
 		service.cancel(id, principal.id(), principal.role(), request.reason());
