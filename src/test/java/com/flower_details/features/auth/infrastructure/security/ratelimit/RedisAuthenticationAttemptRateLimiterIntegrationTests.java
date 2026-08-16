@@ -1,4 +1,4 @@
-package com.flower_details.features.auth.infrastructure.security;
+package com.flower_details.features.auth.infrastructure.security.ratelimit;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

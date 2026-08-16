@@ -2,7 +2,7 @@ package com.flower_details.features.auth.presentation.controller;
 
 import com.flower_details.features.auth.application.dto.view.AuthResult;
 import com.flower_details.features.auth.application.service.AuthApplicationService;
-import com.flower_details.features.auth.infrastructure.security.AuthCookieManager;
+import com.flower_details.features.auth.infrastructure.security.cookie.AuthCookieManager;
 import com.flower_details.features.auth.presentation.dto.request.LoginRequest;
 import com.flower_details.features.auth.presentation.dto.request.RegisterCustomerRequest;
 import com.flower_details.features.auth.presentation.dto.response.AuthResponse;

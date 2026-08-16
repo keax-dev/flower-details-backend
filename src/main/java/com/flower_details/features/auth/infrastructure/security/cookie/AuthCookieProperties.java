@@ -1,10 +1,10 @@
-package com.flower_details.features.auth.infrastructure.security;
+package com.flower_details.features.auth.infrastructure.security.cookie;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-record AuthCookieProperties(
+public record AuthCookieProperties(
 		@Value("${security.cookie.access-token-name:flower_details_access_token}")
 		String accessTokenName,
 
@@ -21,7 +21,7 @@ record AuthCookieProperties(
 		String domain
 ) {
 
-	AuthCookieProperties {
+	public AuthCookieProperties {
 		if (accessTokenName == null || accessTokenName.isBlank()) {
 			accessTokenName = "flower_details_access_token";
 		}

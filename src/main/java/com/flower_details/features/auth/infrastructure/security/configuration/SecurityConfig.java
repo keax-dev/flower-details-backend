@@ -1,6 +1,9 @@
-package com.flower_details.features.auth.infrastructure.security;
+package com.flower_details.features.auth.infrastructure.security.configuration;
 
 import jakarta.servlet.http.HttpServletResponse;
+import com.flower_details.features.auth.infrastructure.security.cookie.AuthCookieManager;
+import com.flower_details.features.auth.infrastructure.security.jwt.JwtAuthenticationFilter;
+import com.flower_details.features.auth.infrastructure.security.ratelimit.AuthenticationRateLimitFilter;
 import com.flower_details.shared.infrastructure.observability.RequestIdFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;

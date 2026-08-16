@@ -1,6 +1,6 @@
 package com.flower_details.features.order.presentation.controller;
 
-import com.flower_details.features.auth.infrastructure.security.AuthenticatedUserPrincipal;
+import com.flower_details.features.auth.infrastructure.security.identity.AuthenticatedUserPrincipal;
 import com.flower_details.features.order.application.service.OrderApplicationService;
 import com.flower_details.features.order.domain.model.FulfillmentType;
 import com.flower_details.features.order.domain.model.OrderSearchCriteria;

@@ -1,6 +1,6 @@
 package com.flower_details.features.users.presentation.controller;
 
-import com.flower_details.features.auth.infrastructure.security.AuthenticatedUserPrincipal;
+import com.flower_details.features.auth.infrastructure.security.identity.AuthenticatedUserPrincipal;
 import com.flower_details.features.users.application.service.UserApplicationService;
 import com.flower_details.features.users.presentation.dto.request.CreateOperatorRequest;
 import com.flower_details.features.users.presentation.dto.response.UserResponse;

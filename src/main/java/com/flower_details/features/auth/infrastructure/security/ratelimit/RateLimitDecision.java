@@ -1,4 +1,4 @@
-package com.flower_details.features.auth.infrastructure.security;
+package com.flower_details.features.auth.infrastructure.security.ratelimit;
 
 record RateLimitDecision(boolean allowed, long retryAfterSeconds) {
 

@@ -1,6 +1,6 @@
 package com.flower_details.features.cart.presentation.controller;
 
-import com.flower_details.features.auth.infrastructure.security.AuthenticatedUserPrincipal;
+import com.flower_details.features.auth.infrastructure.security.identity.AuthenticatedUserPrincipal;
 import com.flower_details.features.cart.application.service.CartApplicationService;
 import com.flower_details.features.cart.presentation.dto.request.AddCartItemRequest;
 import com.flower_details.features.cart.presentation.dto.request.UpdateCartItemRequest;

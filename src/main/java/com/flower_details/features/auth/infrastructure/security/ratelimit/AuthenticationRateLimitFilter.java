@@ -1,4 +1,4 @@
-package com.flower_details.features.auth.infrastructure.security;
+package com.flower_details.features.auth.infrastructure.security.ratelimit;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,7 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 @Component
 @RequiredArgsConstructor
-class AuthenticationRateLimitFilter extends OncePerRequestFilter {
+public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
 
 	private final AuthenticationAttemptRateLimiter rateLimiter;
 

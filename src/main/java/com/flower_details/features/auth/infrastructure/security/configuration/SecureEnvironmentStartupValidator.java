@@ -1,5 +1,7 @@
-package com.flower_details.features.auth.infrastructure.security;
+package com.flower_details.features.auth.infrastructure.security.configuration;
 
+import com.flower_details.features.auth.infrastructure.security.cookie.AuthCookieProperties;
+import com.flower_details.features.auth.infrastructure.security.ratelimit.AuthenticationRateLimitProperties;
 import com.flower_details.features.users.infrastructure.bootstrap.AdminBootstrapProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;

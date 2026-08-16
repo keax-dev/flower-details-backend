@@ -1,5 +1,7 @@
-package com.flower_details.features.auth.infrastructure.security;
+package com.flower_details.features.auth.infrastructure.security.jwt;
 
+import com.flower_details.features.auth.infrastructure.security.cookie.AuthCookieManager;
+import com.flower_details.features.auth.infrastructure.security.identity.AuthenticatedUserPrincipal;
 import com.flower_details.features.users.domain.model.User;
 import com.flower_details.features.users.domain.repository.UserRepository;
 import jakarta.servlet.FilterChain;
@@ -19,7 +21,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private static final String BEARER_PREFIX = "Bearer ";
 

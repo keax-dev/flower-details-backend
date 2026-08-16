@@ -1,4 +1,4 @@
-package com.flower_details.features.auth.infrastructure.security;
+package com.flower_details.features.auth.infrastructure.security.identity;
 
 import com.flower_details.features.users.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.flower_details.features.auth.infrastructure.security;
+package com.flower_details.features.auth.infrastructure.security.jwt;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
