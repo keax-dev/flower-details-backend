@@ -1,7 +1,11 @@
 package com.flower_details.features.cart.presentation.controller;
 
 import com.flower_details.features.auth.application.security.AuthenticatedUser;
-import com.flower_details.features.cart.application.service.CartApplicationService;
+import com.flower_details.features.cart.application.usecase.AddCartItemUseCase;
+import com.flower_details.features.cart.application.usecase.DeleteCartItemUseCase;
+import com.flower_details.features.cart.application.usecase.DeleteCartItemsUseCase;
+import com.flower_details.features.cart.application.usecase.GetCartUseCase;
+import com.flower_details.features.cart.application.usecase.UpdateCartItemUseCase;
 import com.flower_details.features.cart.presentation.dto.request.AddCartItemRequest;
 import com.flower_details.features.cart.presentation.dto.request.UpdateCartItemRequest;
 import com.flower_details.features.cart.presentation.dto.response.CartResponse;
@@ -26,11 +30,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 class CartController {
 
-	private final CartApplicationService cartApplicationService;
+	private final GetCartUseCase getCartUseCase;
+	private final AddCartItemUseCase addCartItemUseCase;
+	private final UpdateCartItemUseCase updateCartItemUseCase;
+	private final DeleteCartItemUseCase deleteCartItemUseCase;
+	private final DeleteCartItemsUseCase deleteCartItemsUseCase;
 
 	@GetMapping
 	CartResponse getCart(@AuthenticationPrincipal AuthenticatedUser principal) {
-		return CartResponse.from(cartApplicationService.getCart(principal.id()));
+		return CartResponse.from(getCartUseCase.execute(principal.id()));
 	}
 
 	@PostMapping("/items")
@@ -39,7 +47,7 @@ class CartController {
 			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody AddCartItemRequest request
 	) {
-		return CartResponse.from(cartApplicationService.addItem(principal.id(), request.toCommand()));
+		return CartResponse.from(addCartItemUseCase.execute(principal.id(), request.toCommand()));
 	}
 
 	@PutMapping("/items/{itemId}")
@@ -48,18 +56,18 @@ class CartController {
 			@PathVariable Long itemId,
 			@Valid @RequestBody UpdateCartItemRequest request
 	) {
-		return CartResponse.from(cartApplicationService.updateItem(principal.id(), request.toCommand(itemId)));
+		return CartResponse.from(updateCartItemUseCase.execute(principal.id(), request.toCommand(itemId)));
 	}
 
 	@DeleteMapping("/items/{itemId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void deleteItem(@AuthenticationPrincipal AuthenticatedUser principal, @PathVariable Long itemId) {
-		cartApplicationService.deleteItem(principal.id(), itemId);
+		deleteCartItemUseCase.execute(principal.id(), itemId);
 	}
 
 	@DeleteMapping("/items")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void clearCart(@AuthenticationPrincipal AuthenticatedUser principal) {
-		cartApplicationService.clearCart(principal.id());
+		deleteCartItemsUseCase.execute(principal.id());
 	}
 }

@@ -2,7 +2,11 @@ package com.flower_details.features.order.presentation.controller;
 
 import com.flower_details.features.auth.application.security.AuthenticatedUser;
 import com.flower_details.features.order.application.dto.query.OrderSearchQuery;
-import com.flower_details.features.order.application.service.OrderApplicationService;
+import com.flower_details.features.order.application.usecase.CreateOrderUseCase;
+import com.flower_details.features.order.application.usecase.PatchOrderAssignmentUseCase;
+import com.flower_details.features.order.application.usecase.PatchOrderCancellationUseCase;
+import com.flower_details.features.order.application.usecase.PatchOrderStatusUseCase;
+import com.flower_details.features.order.application.usecase.RetrieveOrdersUseCase;
 import com.flower_details.features.order.domain.model.FulfillmentType;
 import com.flower_details.features.order.domain.model.OrderStatus;
 import com.flower_details.features.order.presentation.dto.request.AssignOrderRequest;
@@ -40,7 +44,11 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 class OrderController {
 
-	private final OrderApplicationService service;
+	private final CreateOrderUseCase createOrderUseCase;
+	private final RetrieveOrdersUseCase retrieveOrdersUseCase;
+	private final PatchOrderAssignmentUseCase patchOrderAssignmentUseCase;
+	private final PatchOrderStatusUseCase patchOrderStatusUseCase;
+	private final PatchOrderCancellationUseCase patchOrderCancellationUseCase;
 
 	@PostMapping
 	@PreAuthorize("hasRole('CUSTOMER')")
@@ -49,7 +57,7 @@ class OrderController {
 			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody CreateOrderRequest request
 	) {
-		return OrderResponse.from(service.create(principal.id(), request.toCommand()));
+		return OrderResponse.from(createOrderUseCase.execute(principal.id(), request.toCommand()));
 	}
 
 	@GetMapping("/my")
@@ -67,7 +75,7 @@ class OrderController {
 			@RequestParam(defaultValue = "desc") String direction
 	) {
 		return PageResponse.from(
-				service.myOrders(principal.id(), orderCriteria(q, null, null, status, fulfillmentType, createdFrom, createdTo, sortBy, direction), new PageRequest(page, size)),
+				retrieveOrdersUseCase.mine(principal.id(), orderCriteria(q, null, null, status, fulfillmentType, createdFrom, createdTo, sortBy, direction), new PageRequest(page, size)),
 				OrderResponse::from
 		);
 	}
@@ -88,7 +96,7 @@ class OrderController {
 			@RequestParam(defaultValue = "desc") String direction
 	) {
 		return PageResponse.from(
-				service.allOrders(orderCriteria(q, customerId, operatorId, status, fulfillmentType, createdFrom, createdTo, sortBy, direction), new PageRequest(page, size)),
+				retrieveOrdersUseCase.all(orderCriteria(q, customerId, operatorId, status, fulfillmentType, createdFrom, createdTo, sortBy, direction), new PageRequest(page, size)),
 				OrderResponse::from
 		);
 	}
@@ -96,7 +104,7 @@ class OrderController {
 	@GetMapping("/{id}")
 	@PreAuthorize("hasAnyRole('CUSTOMER','ADMIN','OPERATOR')")
 	OrderResponse get(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser principal) {
-		return OrderResponse.from(service.get(id, principal.id(), principal.role()));
+		return OrderResponse.from(retrieveOrdersUseCase.byId(id, principal.id(), principal.role()));
 	}
 
 	@GetMapping("/{id}/audit")
@@ -105,7 +113,7 @@ class OrderController {
 			@PathVariable Long id,
 			@AuthenticationPrincipal AuthenticatedUser principal
 	) {
-		return service.auditTrail(id, principal.id(), principal.role()).stream().map(OrderAuditResponse::from).toList();
+		return retrieveOrdersUseCase.auditTrail(id, principal.id(), principal.role()).stream().map(OrderAuditResponse::from).toList();
 	}
 
 	@PatchMapping("/{id}/assign")
@@ -115,7 +123,7 @@ class OrderController {
 			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody AssignOrderRequest request
 	) {
-		return OrderResponse.from(service.assign(id, principal.id(), principal.role(), request.operatorId()));
+		return OrderResponse.from(patchOrderAssignmentUseCase.execute(id, principal.id(), principal.role(), request.operatorId()));
 	}
 
 	@PatchMapping("/{id}/status")
@@ -125,7 +133,7 @@ class OrderController {
 			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody ChangeOrderStatusRequest request
 	) {
-		return OrderResponse.from(service.changeStatus(id, principal.id(), principal.role(), request.status()));
+		return OrderResponse.from(patchOrderStatusUseCase.execute(id, principal.id(), principal.role(), request.status()));
 	}
 
 	@PatchMapping("/{id}/cancel")
@@ -136,7 +144,7 @@ class OrderController {
 			@AuthenticationPrincipal AuthenticatedUser principal,
 			@Valid @RequestBody CancelOrderRequest request
 	) {
-		service.cancel(id, principal.id(), principal.role(), request.reason());
+		patchOrderCancellationUseCase.execute(id, principal.id(), principal.role(), request.reason());
 	}
 
 	private static OrderSearchQuery orderCriteria(

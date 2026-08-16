@@ -1,13 +1,18 @@
 package com.flower_details.features.order;
 
 import com.flower_details.features.cart.application.dto.command.AddCartItemCommand;
-import com.flower_details.features.cart.application.service.CartApplicationService;
+import com.flower_details.features.cart.application.usecase.AddCartItemUseCase;
+import com.flower_details.features.cart.application.usecase.GetCartUseCase;
 import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.category.domain.repository.CategoryRepository;
 import com.flower_details.features.order.application.dto.command.CreateOrderCommand;
 import com.flower_details.features.order.application.dto.view.OrderView;
 import com.flower_details.features.order.application.dto.view.OrderAuditView;
-import com.flower_details.features.order.application.service.OrderApplicationService;
+import com.flower_details.features.order.application.usecase.CreateOrderUseCase;
+import com.flower_details.features.order.application.usecase.PatchOrderAssignmentUseCase;
+import com.flower_details.features.order.application.usecase.PatchOrderCancellationUseCase;
+import com.flower_details.features.order.application.usecase.PatchOrderStatusUseCase;
+import com.flower_details.features.order.application.usecase.RetrieveOrdersUseCase;
 import com.flower_details.features.order.domain.model.FulfillmentType;
 import com.flower_details.features.order.domain.model.OrderStatus;
 import com.flower_details.features.product.domain.model.Product;
@@ -30,10 +35,25 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class OrderApplicationServiceIntegrationTests {
 
 	@Autowired
-	private OrderApplicationService orderApplicationService;
+	private CreateOrderUseCase createOrderUseCase;
 
 	@Autowired
-	private CartApplicationService cartApplicationService;
+	private RetrieveOrdersUseCase retrieveOrdersUseCase;
+
+	@Autowired
+	private PatchOrderAssignmentUseCase patchOrderAssignmentUseCase;
+
+	@Autowired
+	private PatchOrderStatusUseCase patchOrderStatusUseCase;
+
+	@Autowired
+	private PatchOrderCancellationUseCase patchOrderCancellationUseCase;
+
+	@Autowired
+	private AddCartItemUseCase addCartItemUseCase;
+
+	@Autowired
+	private GetCartUseCase getCartUseCase;
 
 	@Autowired
 	private CategoryRepository categoryRepository;
@@ -56,8 +76,8 @@ class OrderApplicationServiceIntegrationTests {
 				category.id(), "Ramo " + suffix, "Detalle de prueba", new BigDecimal("24.50"), true
 		));
 
-		cartApplicationService.addItem(customer.id(), new AddCartItemCommand(product.id(), 2));
-		OrderView order = orderApplicationService.create(customer.id(), new CreateOrderCommand(
+		addCartItemUseCase.execute(customer.id(), new AddCartItemCommand(product.id(), 2));
+		OrderView order = createOrderUseCase.execute(customer.id(), new CreateOrderCommand(
 				FulfillmentType.PICKUP, "Cliente", "0999999999", null, "Sin envoltura adicional"
 		));
 
@@ -67,20 +87,23 @@ class OrderApplicationServiceIntegrationTests {
 			assertThat(item.unitPrice()).isEqualByComparingTo("24.50");
 			assertThat(item.subtotal()).isEqualByComparingTo("49.00");
 		});
-		assertThat(cartApplicationService.getCart(customer.id()).items()).isEmpty();
+		assertThat(getCartUseCase.execute(customer.id()).items()).isEmpty();
 
-		orderApplicationService.assign(order.id(), assignedOperator.id(), UserRole.OPERATOR, null);
-		assertThatThrownBy(() -> orderApplicationService.changeStatus(
+		patchOrderAssignmentUseCase.execute(order.id(), assignedOperator.id(), UserRole.OPERATOR, null);
+		assertThatThrownBy(() -> patchOrderAssignmentUseCase.execute(
+				order.id(), anotherOperator.id(), UserRole.OPERATOR, null
+		)).isInstanceOf(DomainException.class);
+		assertThatThrownBy(() -> patchOrderStatusUseCase.execute(
 				order.id(), anotherOperator.id(), UserRole.OPERATOR, OrderStatus.IN_PREPARATION
 		)).isInstanceOf(DomainException.class);
 
-		OrderView inPreparation = orderApplicationService.changeStatus(
+		OrderView inPreparation = patchOrderStatusUseCase.execute(
 				order.id(), assignedOperator.id(), UserRole.OPERATOR, OrderStatus.IN_PREPARATION
 		);
 		assertThat(inPreparation.status()).isEqualTo(OrderStatus.IN_PREPARATION);
-		orderApplicationService.cancel(order.id(), admin.id(), UserRole.ADMIN, "Cliente solicito cancelar el pedido");
+		patchOrderCancellationUseCase.execute(order.id(), admin.id(), UserRole.ADMIN, "Cliente solicito cancelar el pedido");
 
-		assertThat(orderApplicationService.auditTrail(order.id(), customer.id(), UserRole.CUSTOMER))
+		assertThat(retrieveOrdersUseCase.auditTrail(order.id(), customer.id(), UserRole.CUSTOMER))
 				.extracting(OrderAuditView::action)
 				.containsExactly(
 						com.flower_details.features.order.domain.model.OrderAuditAction.CREATED,

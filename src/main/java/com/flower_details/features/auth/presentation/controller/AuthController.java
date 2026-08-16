@@ -1,7 +1,8 @@
 package com.flower_details.features.auth.presentation.controller;
 
 import com.flower_details.features.auth.application.dto.view.AuthResult;
-import com.flower_details.features.auth.application.service.AuthApplicationService;
+import com.flower_details.features.auth.application.usecase.LoginUseCase;
+import com.flower_details.features.auth.application.usecase.RegisterCustomerUseCase;
 import com.flower_details.features.auth.infrastructure.security.cookie.AuthCookieManager;
 import com.flower_details.features.auth.presentation.dto.request.LoginRequest;
 import com.flower_details.features.auth.presentation.dto.request.RegisterCustomerRequest;
@@ -24,7 +25,8 @@ import org.springframework.security.web.csrf.CsrfToken;
 @RequiredArgsConstructor
 class AuthController {
 
-	private final AuthApplicationService authApplicationService;
+	private final RegisterCustomerUseCase registerCustomerUseCase;
+	private final LoginUseCase loginUseCase;
 	private final AuthCookieManager authCookieManager;
 
 	@GetMapping("/csrf")
@@ -34,7 +36,7 @@ class AuthController {
 
 	@PostMapping("/register")
 	ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterCustomerRequest request) {
-		AuthResult result = authApplicationService.registerCustomer(request.toCommand());
+		AuthResult result = registerCustomerUseCase.execute(request.toCommand());
 		return ResponseEntity.status(HttpStatus.CREATED)
 				.header(HttpHeaders.SET_COOKIE, authCookieManager.createAccessTokenCookie(
 						result.accessToken(),
@@ -45,7 +47,7 @@ class AuthController {
 
 	@PostMapping("/login")
 	ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-		AuthResult result = authApplicationService.login(request.toCommand());
+		AuthResult result = loginUseCase.execute(request.toCommand());
 		return ResponseEntity.ok()
 				.header(HttpHeaders.SET_COOKIE, authCookieManager.createAccessTokenCookie(
 						result.accessToken(),

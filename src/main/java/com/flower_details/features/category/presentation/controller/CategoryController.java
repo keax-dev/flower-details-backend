@@ -1,6 +1,9 @@
 package com.flower_details.features.category.presentation.controller;
 
-import com.flower_details.features.category.application.service.CategoryApplicationService;
+import com.flower_details.features.category.application.usecase.CreateCategoryUseCase;
+import com.flower_details.features.category.application.usecase.DeleteCategoryUseCase;
+import com.flower_details.features.category.application.usecase.RetrieveCategoriesUseCase;
+import com.flower_details.features.category.application.usecase.UpdateCategoryUseCase;
 import com.flower_details.features.category.presentation.dto.request.CreateCategoryRequest;
 import com.flower_details.features.category.presentation.dto.request.UpdateCategoryRequest;
 import com.flower_details.features.category.presentation.dto.response.CategoryResponse;
@@ -30,7 +33,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @RequiredArgsConstructor
 class CategoryController {
 
-	private final CategoryApplicationService categoryApplicationService;
+	private final CreateCategoryUseCase createCategoryUseCase;
+	private final RetrieveCategoriesUseCase retrieveCategoriesUseCase;
+	private final UpdateCategoryUseCase updateCategoryUseCase;
+	private final DeleteCategoryUseCase deleteCategoryUseCase;
 
 	@GetMapping
 	PageResponse<CategoryResponse> listCategories(
@@ -38,7 +44,7 @@ class CategoryController {
 			@RequestParam(defaultValue = "20") @Positive(message = "El tamano debe ser mayor a cero") @Max(value = 100, message = "El tamano maximo es 100") int size
 	) {
 		return PageResponse.from(
-				categoryApplicationService.listActiveCategories(new PageRequest(page, size)),
+				retrieveCategoriesUseCase.execute(new PageRequest(page, size)),
 				CategoryResponse::from
 		);
 	}
@@ -47,7 +53,7 @@ class CategoryController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@ResponseStatus(HttpStatus.CREATED)
 	CategoryResponse createCategory(@Valid @RequestBody CreateCategoryRequest request) {
-		return CategoryResponse.from(categoryApplicationService.createCategory(request.toCommand()));
+		return CategoryResponse.from(createCategoryUseCase.execute(request.toCommand()));
 	}
 
 	@PutMapping("/{id}")
@@ -56,13 +62,13 @@ class CategoryController {
 			@PathVariable Long id,
 			@Valid @RequestBody UpdateCategoryRequest request
 	) {
-		return CategoryResponse.from(categoryApplicationService.updateCategory(request.toCommand(id)));
+		return CategoryResponse.from(updateCategoryUseCase.execute(request.toCommand(id)));
 	}
 
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void deleteCategory(@PathVariable Long id) {
-		categoryApplicationService.deleteCategory(id);
+		deleteCategoryUseCase.execute(id);
 	}
 }

@@ -1,12 +1,11 @@
-package com.flower_details.features.auth.application.service;
+package com.flower_details.features.auth.application.usecase;
 
 import com.flower_details.features.auth.application.dto.command.LoginCommand;
-import com.flower_details.features.auth.application.dto.command.RegisterCustomerCommand;
 import com.flower_details.features.auth.application.dto.view.AuthResult;
 import com.flower_details.features.auth.application.exception.InvalidCredentialsException;
 import com.flower_details.features.auth.application.exception.UserInactiveException;
+import com.flower_details.features.auth.application.service.AccessTokenService;
 import com.flower_details.features.users.application.dto.view.UserProfile;
-import com.flower_details.features.users.application.exception.EmailAlreadyRegisteredException;
 import com.flower_details.features.users.application.exception.UserNotFoundException;
 import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
@@ -19,60 +18,29 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class AuthApplicationService {
+public class LoginUseCase {
 
 	private final UserRepository userRepository;
 	private final PersonRepository personRepository;
 	private final PasswordService passwordService;
 	private final AccessTokenService accessTokenService;
 
-	@Transactional
-	public AuthResult registerCustomer(RegisterCustomerCommand command) {
-		if (userRepository.existsByEmail(command.email())) {
-			throw new EmailAlreadyRegisteredException(command.email());
-		}
-
-		User customer = userRepository.save(User.registerCustomer(
-				command.email(),
-				passwordService.hash(command.password())
-		));
-		Person person = personRepository.save(Person.create(
-				customer.id(),
-				command.names(),
-				command.lastNames(),
-				command.phone(),
-				command.documentNumber()
-		));
-
-		return buildAuthResult(customer, person);
-	}
-
 	@Transactional(readOnly = true)
-	public AuthResult login(LoginCommand command) {
+	public AuthResult execute(LoginCommand command) {
 		User user = userRepository.findByEmail(command.email())
 				.orElseThrow(InvalidCredentialsException::new);
-
 		if (!passwordService.matches(command.password(), user.passwordHash())) {
 			throw new InvalidCredentialsException();
 		}
-
 		if (!user.active()) {
 			throw new UserInactiveException();
 		}
-
-		return buildAuthResult(user, findPersonByUserId(user.id()));
-	}
-
-	private AuthResult buildAuthResult(User user, Person person) {
+		Person person = personRepository.findByUserId(user.id())
+				.orElseThrow(() -> new UserNotFoundException(user.id()));
 		return AuthResult.bearer(
 				accessTokenService.generate(user),
 				accessTokenService.expirationSeconds(),
 				UserProfile.from(user, person)
 		);
-	}
-
-	private Person findPersonByUserId(Long userId) {
-		return personRepository.findByUserId(userId)
-				.orElseThrow(() -> new UserNotFoundException(userId));
 	}
 }

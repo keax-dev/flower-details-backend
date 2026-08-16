@@ -2,8 +2,11 @@ package com.flower_details.features.product.presentation.controller;
 
 import com.flower_details.features.product.application.dto.storage.UploadFile;
 import com.flower_details.features.product.application.dto.query.ProductSearchQuery;
-import com.flower_details.features.product.application.service.ProductImageApplicationService;
-import com.flower_details.features.product.application.service.ProductApplicationService;
+import com.flower_details.features.product.application.usecase.CreateProductImagesUseCase;
+import com.flower_details.features.product.application.usecase.CreateProductUseCase;
+import com.flower_details.features.product.application.usecase.DeleteProductUseCase;
+import com.flower_details.features.product.application.usecase.RetrieveProductsUseCase;
+import com.flower_details.features.product.application.usecase.UpdateProductUseCase;
 import com.flower_details.features.product.presentation.dto.request.CreateProductRequest;
 import com.flower_details.features.product.presentation.dto.request.UpdateProductRequest;
 import com.flower_details.features.product.presentation.dto.response.ProductResponse;
@@ -42,8 +45,11 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 class ProductController {
 
-	private final ProductApplicationService productApplicationService;
-	private final ProductImageApplicationService productImageApplicationService;
+	private final RetrieveProductsUseCase retrieveProductsUseCase;
+	private final CreateProductUseCase createProductUseCase;
+	private final UpdateProductUseCase updateProductUseCase;
+	private final CreateProductImagesUseCase createProductImagesUseCase;
+	private final DeleteProductUseCase deleteProductUseCase;
 
 	@GetMapping
 	PageResponse<ProductResponse> listProducts(
@@ -57,7 +63,7 @@ class ProductController {
 			@RequestParam(defaultValue = "desc") String direction
 	) {
 		return PageResponse.from(
-				productApplicationService.listProducts(
+				retrieveProductsUseCase.list(
 						ProductSearchQuery.forCatalog(q, categoryId, minPrice, maxPrice, sortBy, direction),
 						new PageRequest(page, size)
 				),
@@ -79,7 +85,7 @@ class ProductController {
 			@RequestParam(defaultValue = "desc") String direction
 	) {
 		return PageResponse.from(
-				productApplicationService.listProducts(
+				retrieveProductsUseCase.list(
 						ProductSearchQuery.forManagement(q, categoryId, minPrice, maxPrice, active, sortBy, direction),
 						new PageRequest(page, size)
 				),
@@ -89,14 +95,14 @@ class ProductController {
 
 	@GetMapping("/{id}")
 	ProductResponse getProduct(@PathVariable Long id) {
-		return ProductResponse.from(productApplicationService.getActiveProduct(id));
+		return ProductResponse.from(retrieveProductsUseCase.byId(id));
 	}
 
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
 	@PreAuthorize("hasRole('ADMIN')")
 	@ResponseStatus(HttpStatus.CREATED)
 	ProductResponse createProduct(@Valid @RequestBody CreateProductRequest request) {
-		return ProductResponse.from(productApplicationService.createProduct(request.toCommand()));
+		return ProductResponse.from(createProductUseCase.execute(request.toCommand()));
 	}
 
 	@PutMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -105,7 +111,7 @@ class ProductController {
 			@PathVariable Long id,
 			@Valid @RequestBody UpdateProductRequest request
 	) {
-		return ProductResponse.from(productApplicationService.updateProduct(request.toCommand(id)));
+		return ProductResponse.from(updateProductUseCase.execute(request.toCommand(id)));
 	}
 
 	@PostMapping(path = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -115,14 +121,14 @@ class ProductController {
 			@PathVariable Long id,
 			@RequestParam(name = "images") List<MultipartFile> images
 	) {
-		return ProductResponse.from(productImageApplicationService.addProductImages(id, toUploadFiles(images)));
+		return ProductResponse.from(createProductImagesUseCase.execute(id, toUploadFiles(images)));
 	}
 
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void deleteProduct(@PathVariable Long id) {
-		productApplicationService.deleteProduct(id);
+		deleteProductUseCase.execute(id);
 	}
 
 	private static List<UploadFile> toUploadFiles(List<MultipartFile> files) {

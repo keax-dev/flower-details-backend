@@ -1,7 +1,11 @@
 package com.flower_details.features.users.presentation.controller;
 
 import com.flower_details.features.auth.application.security.AuthenticatedUser;
-import com.flower_details.features.users.application.service.UserApplicationService;
+import com.flower_details.features.users.application.usecase.CreateOperatorUseCase;
+import com.flower_details.features.users.application.usecase.DeleteUserUseCase;
+import com.flower_details.features.users.application.usecase.PatchActivateUserUseCase;
+import com.flower_details.features.users.application.usecase.PatchDeactivateUserUseCase;
+import com.flower_details.features.users.application.usecase.RetrieveUsersUseCase;
 import com.flower_details.features.users.presentation.dto.request.CreateOperatorRequest;
 import com.flower_details.features.users.presentation.dto.response.UserResponse;
 import com.flower_details.shared.domain.pagination.PageRequest;
@@ -29,11 +33,15 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @RequiredArgsConstructor
 class UserController {
 
-	private final UserApplicationService userApplicationService;
+	private final RetrieveUsersUseCase retrieveUsersUseCase;
+	private final CreateOperatorUseCase createOperatorUseCase;
+	private final PatchActivateUserUseCase patchActivateUserUseCase;
+	private final PatchDeactivateUserUseCase patchDeactivateUserUseCase;
+	private final DeleteUserUseCase deleteUserUseCase;
 
 	@GetMapping("/api/me")
 	UserResponse me(@AuthenticationPrincipal AuthenticatedUser principal) {
-		return UserResponse.from(userApplicationService.getById(principal.id()));
+		return UserResponse.from(retrieveUsersUseCase.byId(principal.id()));
 	}
 
 	@GetMapping("/api/users")
@@ -43,7 +51,7 @@ class UserController {
 			@RequestParam(defaultValue = "20") @Positive(message = "El tamano debe ser mayor a cero") @Max(value = 100, message = "El tamano maximo es 100") int size
 	) {
 		return PageResponse.from(
-				userApplicationService.listUsers(new PageRequest(page, size)),
+				retrieveUsersUseCase.list(new PageRequest(page, size)),
 				UserResponse::from
 		);
 	}
@@ -52,7 +60,7 @@ class UserController {
 	@PreAuthorize("hasRole('ADMIN')")
 	@ResponseStatus(HttpStatus.CREATED)
 	UserResponse createOperator(@Valid @RequestBody CreateOperatorRequest request) {
-		return UserResponse.from(userApplicationService.createOperator(request.toCommand()));
+		return UserResponse.from(createOperatorUseCase.execute(request.toCommand()));
 	}
 
 	@PatchMapping("/api/users/{id}/activate")
@@ -61,7 +69,7 @@ class UserController {
 			@PathVariable Long id,
 			@AuthenticationPrincipal AuthenticatedUser principal
 	) {
-		return UserResponse.from(userApplicationService.activateUser(id, principal.id()));
+		return UserResponse.from(patchActivateUserUseCase.execute(id, principal.id()));
 	}
 
 	@PatchMapping("/api/users/{id}/deactivate")
@@ -70,7 +78,7 @@ class UserController {
 			@PathVariable Long id,
 			@AuthenticationPrincipal AuthenticatedUser principal
 	) {
-		return UserResponse.from(userApplicationService.deactivateUser(id, principal.id()));
+		return UserResponse.from(patchDeactivateUserUseCase.execute(id, principal.id()));
 	}
 
 	@DeleteMapping("/api/users/{id}")
@@ -80,6 +88,6 @@ class UserController {
 			@PathVariable Long id,
 			@AuthenticationPrincipal AuthenticatedUser principal
 	) {
-		userApplicationService.deleteUser(id, principal.id());
+		deleteUserUseCase.execute(id, principal.id());
 	}
 }

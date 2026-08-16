@@ -1,7 +1,7 @@
 package com.flower_details.features.product.presentation.controller;
 
 import com.flower_details.features.product.application.dto.storage.StoredFileContent;
-import com.flower_details.features.product.application.service.ProductImageApplicationService;
+import com.flower_details.features.product.application.usecase.RetrieveProductsUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ContentDisposition;
@@ -20,11 +20,11 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 class ProductImageController {
 
-	private final ProductImageApplicationService productImageApplicationService;
+	private final RetrieveProductsUseCase retrieveProductsUseCase;
 
 	@GetMapping("/{storedFileName}")
 	ResponseEntity<byte[]> getProductImage(@PathVariable String storedFileName) {
-		StoredFileContent file = productImageApplicationService.getProductImageFile(storedFileName);
+		StoredFileContent file = retrieveProductsUseCase.imageFile(storedFileName);
 		return ResponseEntity.ok()
 				.contentType(MediaType.parseMediaType(file.contentType()))
 				.header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
