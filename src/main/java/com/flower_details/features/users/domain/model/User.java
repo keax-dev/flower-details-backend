@@ -65,6 +65,10 @@ public class User {
 		active = true;
 	}
 
+	public void updatePasswordHash(String passwordHash) {
+		this.passwordHash = requireText(passwordHash, "La contrasena cifrada es obligatoria");
+	}
+
 	public Long id() {
 		return id;
 	}

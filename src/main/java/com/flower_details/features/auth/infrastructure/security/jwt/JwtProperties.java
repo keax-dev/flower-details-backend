@@ -8,7 +8,7 @@ import java.time.Duration;
 
 @Component
 public record JwtProperties(
-		@Value("${security.jwt.secret:flower-details-local-development-secret-change-me-please-32bytes}")
+		@Value("${security.jwt.secret:}")
 		String secret,
 
 		@Value("${security.jwt.expiration-minutes:1440}")

@@ -8,7 +8,7 @@ import java.util.List;
 
 @Component
 record CorsProperties(
-		@Value("${security.cors.allowed-origins:http://localhost:4200}") String allowedOrigins
+		@Value("${security.cors.allowed-origins:}") String allowedOrigins
 ) {
 
 	List<String> origins() {

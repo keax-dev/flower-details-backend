@@ -25,7 +25,7 @@ public class LoginUseCase {
 	private final PasswordService passwordService;
 	private final AccessTokenService accessTokenService;
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public AuthResult execute(LoginCommand command) {
 		User user = userRepository.findByEmail(command.email())
 				.orElseThrow(InvalidCredentialsException::new);
@@ -35,8 +35,13 @@ public class LoginUseCase {
 		if (!user.active()) {
 			throw new UserInactiveException();
 		}
-		Person person = personRepository.findByUserId(user.id())
-				.orElseThrow(() -> new UserNotFoundException(user.id()));
+		if (passwordService.needsRehash(user.passwordHash())) {
+			user.updatePasswordHash(passwordService.hash(command.password()));
+			user = userRepository.save(user);
+		}
+		Long userId = user.id();
+		Person person = personRepository.findByUserId(userId)
+				.orElseThrow(() -> new UserNotFoundException(userId));
 		return AuthResult.bearer(
 				accessTokenService.generate(user),
 				accessTokenService.expirationSeconds(),

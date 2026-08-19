@@ -8,7 +8,7 @@ public record AuthCookieProperties(
 		@Value("${security.cookie.access-token-name:flower_details_access_token}")
 		String accessTokenName,
 
-		@Value("${security.cookie.secure:false}")
+		@Value("${security.cookie.secure:true}")
 		boolean secure,
 
 		@Value("${security.cookie.same-site:Lax}")

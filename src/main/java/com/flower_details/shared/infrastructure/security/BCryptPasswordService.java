@@ -18,4 +18,8 @@ public class BCryptPasswordService implements PasswordService {
 	public boolean matches(String rawPassword, String passwordHash) {
 		return passwordEncoder.matches(rawPassword, passwordHash);
 	}
+
+	public boolean needsRehash(String passwordHash) {
+		return passwordEncoder.upgradeEncoding(passwordHash);
+	}
 }

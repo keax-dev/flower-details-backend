@@ -17,6 +17,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -47,6 +49,7 @@ class SecurityConfig {
 				.cors(cors -> {})
 				.csrf(csrf -> csrf
 						.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+						.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
 						.requireCsrfProtectionMatcher(request -> requiresCsrfProtection(request))
 				)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -57,9 +60,12 @@ class SecurityConfig {
 							response.getWriter().write("{\"message\":\"No autenticado\"}");
 						})
 						.accessDeniedHandler((request, response, accessDeniedException) -> {
+							boolean csrfFailure = accessDeniedException instanceof CsrfException;
 							response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 							response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-							response.getWriter().write("{\"message\":\"No tienes permisos para esta accion\"}");
+							response.getWriter().write(csrfFailure
+									? "{\"message\":\"Solicitud rechazada por seguridad\",\"code\":\"CSRF_TOKEN_INVALID\"}"
+									: "{\"message\":\"No tienes permisos para esta accion\",\"code\":\"ACCESS_DENIED\"}");
 						})
 				)
 				.authorizeHttpRequests(authorize -> authorize
@@ -117,7 +123,7 @@ class SecurityConfig {
 
 	@Bean
 	PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
+		return new BCryptPasswordEncoder(12);
 	}
 
 	@Bean

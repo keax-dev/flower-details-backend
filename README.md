@@ -15,7 +15,7 @@ Backend para el catalogo, carrito y gestion de pedidos de Flower Details.
 
 | Perfil | Uso | Configuracion |
 | --- | --- | --- |
-| Sin perfil | Desarrollo local | `application.properties` con PostgreSQL local, datos explicitos y bootstrap de admin. |
+| `dev` | Desarrollo local | PostgreSQL local y bootstrap de admin local. Debe activarse explicitamente. |
 | `testing` | QA o staging | Variables de entorno obligatorias, Redis requerido y seguridad equivalente a produccion. |
 | `prod` | Produccion | Variables de entorno obligatorias, Redis requerido, Swagger deshabilitado y logs JSON. |
 | `test` | Suite automatizada | Solo JUnit: H2 y Testcontainers. No es un ambiente desplegable. |
@@ -25,6 +25,7 @@ Backend para el catalogo, carrito y gestion de pedidos de Flower Details.
 Requisitos: JDK 21, Maven 3.9+ y PostgreSQL local en `localhost:5432` con base `flower_details` y credenciales `postgres/postgres`.
 
 ```powershell
+$env:SPRING_PROFILES_ACTIVE='dev'
 mvn spring-boot:run
 ```
 
@@ -71,12 +72,15 @@ Estas variables no tienen valores por defecto en los perfiles seguros:
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | Conexion PostgreSQL. |
 | `JWT_SECRET` | Secreto de al menos 32 bytes. |
 | `CORS_ALLOWED_ORIGINS` | Origenes HTTPS exactos del frontend, separados por coma. |
+| `TRUSTED_PROXY_ADDRESSES` | IPs o rangos CIDR de los proxies que agregan `X-Forwarded-For`; vacio si la API no esta detras de un proxy. |
 | `PRODUCT_IMAGES_ROOT_PATH` | Directorio persistente para imagenes. |
 | `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | Conexion Redis para rate limiting. |
 
 Opcionales: `SERVER_PORT`, `JWT_ISSUER`, `JWT_AUDIENCE`, `AUTH_COOKIE_SAME_SITE`, `REDIS_SSL_ENABLED`, limites Hikari y limites de carga de imagenes.
 
-El arranque de `testing` y `prod` falla si Redis no responde, si CORS no usa HTTPS, si se activa el bootstrap de administrador o si la cookie no es `Secure`.
+El arranque fuera de `dev` y `test` falla si Redis no responde, si CORS no usa HTTPS, si se activa el bootstrap de administrador o si la cookie no es `Secure`.
+
+Las contrasenas nuevas de clientes y operadores requieren al menos 10 caracteres, una mayuscula, una minuscula y un numero. BCrypt se configura con costo 12.
 
 ## Pruebas
 

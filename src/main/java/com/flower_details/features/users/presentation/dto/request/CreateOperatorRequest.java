@@ -1,6 +1,7 @@
 package com.flower_details.features.users.presentation.dto.request;
 
 import com.flower_details.features.users.application.dto.command.CreateOperatorCommand;
+import com.flower_details.shared.presentation.validation.StrongPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,7 +21,7 @@ public record CreateOperatorRequest(
 		String email,
 
 		@NotBlank(message = "La contrasena es obligatoria")
-		@Size(min = 8, max = 72, message = "La contrasena debe tener entre 8 y 72 caracteres")
+		@StrongPassword
 		String password,
 
 		@Size(max = 30, message = "El telefono no puede superar 30 caracteres")

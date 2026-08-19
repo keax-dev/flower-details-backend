@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public record AdminBootstrapProperties(
-		@Value("${app.bootstrap.admin.enabled:true}")
+		@Value("${app.bootstrap.admin.enabled:false}")
 		boolean enabled,
 
 		@Value("${app.bootstrap.admin.names:Administrador}")

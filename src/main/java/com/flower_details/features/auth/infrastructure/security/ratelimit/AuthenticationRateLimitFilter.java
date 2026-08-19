@@ -12,11 +12,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+
 @Component
 @RequiredArgsConstructor
 public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
 
 	private final AuthenticationAttemptRateLimiter rateLimiter;
+	private final ClientIpResolver clientIpResolver;
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -48,7 +50,7 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
 		}
 
 		filterChain.doFilter(request, response);
-		if (response.getStatus() >= 200 && response.getStatus() < 300) {
+		if (isSuccessfulLogin(request, response)) {
 			try {
 				rateLimiter.reset(clientKey);
 			}
@@ -58,8 +60,14 @@ public class AuthenticationRateLimitFilter extends OncePerRequestFilter {
 		}
 	}
 
-	private static String clientKey(HttpServletRequest request) {
-		return request.getRemoteAddr();
+	private String clientKey(HttpServletRequest request) {
+		return request.getRequestURI() + ":" + clientIpResolver.resolve(request);
+	}
+
+	private static boolean isSuccessfulLogin(HttpServletRequest request, HttpServletResponse response) {
+		return "/api/auth/login".equals(request.getRequestURI())
+				&& response.getStatus() >= 200
+				&& response.getStatus() < 300;
 	}
 
 }

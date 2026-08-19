@@ -1,9 +1,9 @@
 package com.flower_details.features.auth.presentation.dto.request;
 
 import com.flower_details.features.auth.application.dto.command.LoginCommand;
+import com.flower_details.shared.presentation.validation.StrongPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 public record LoginRequest(
 		@NotBlank(message = "El correo es obligatorio")
@@ -11,7 +11,7 @@ public record LoginRequest(
 		String email,
 
 		@NotBlank(message = "La contrasena es obligatoria")
-		@Size(max = 72, message = "La contrasena no puede superar 72 caracteres")
+		@StrongPassword(requireStrength = false, message = "La contrasena no puede superar 72 bytes")
 		String password
 ) {
 

@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,6 +28,20 @@ class AuthCookieIntegrationTests {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@Test
+	void csrfEndpointReturnsTheSameTokenStoredInCookieForSpaClients() throws Exception {
+		MvcResult result = mockMvc.perform(get("/api/auth/csrf"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.headerName").value("X-XSRF-TOKEN"))
+				.andReturn();
+
+		Cookie csrfCookie = result.getResponse().getCookie("XSRF-TOKEN");
+		String responseToken = com.jayway.jsonpath.JsonPath.read(result.getResponse().getContentAsString(), "$.token");
+
+		assertThat(csrfCookie).isNotNull();
+		assertThat(responseToken).isEqualTo(csrfCookie.getValue());
+	}
 
 	@Test
 	void registerSetsHttpOnlyCookieWithoutExposingJwtInBody() throws Exception {
@@ -70,6 +85,22 @@ class AuthCookieIntegrationTests {
 	}
 
 	@Test
+	void registerRejectsAWeakPassword() throws Exception {
+		mockMvc.perform(post("/api/auth/register")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("""
+							{
+							  "names": "Cliente",
+							  "lastNames": "Demo",
+							  "email": "weak-%s@flowerdetails.test",
+							  "password": "solominsculas123"
+							}
+							""".formatted(UUID.randomUUID())))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.validationErrors.password").exists());
+	}
+
+	@Test
 	void logoutClearsAccessTokenCookie() throws Exception {
 		MvcResult logoutResult = mockMvc.perform(post("/api/auth/logout"))
 				.andExpect(status().isNoContent())
@@ -89,5 +120,15 @@ class AuthCookieIntegrationTests {
 				.andExpect(status().isOk())
 				.andExpect(result -> assertThat(result.getResponse().getHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS))
 						.contains("PATCH"));
+	}
+
+	@Test
+	void stateChangingRequestsWithAccessCookieStillNeedCsrfToken() throws Exception {
+		Cookie fakeAccessTokenCookie = new Cookie(ACCESS_COOKIE_NAME, "fake-token");
+
+		mockMvc.perform(delete("/api/categories/1")
+					.cookie(fakeAccessTokenCookie))
+				.andExpect(status().isForbidden())
+				.andExpect(jsonPath("$.code").value("CSRF_TOKEN_INVALID"));
 	}
 }

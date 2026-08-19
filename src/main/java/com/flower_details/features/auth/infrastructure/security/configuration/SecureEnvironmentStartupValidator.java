@@ -15,7 +15,7 @@ import java.net.URI;
 import java.util.List;
 
 @Component
-@Profile({"testing", "prod"})
+@Profile("!dev & !test")
 @RequiredArgsConstructor
 class SecureEnvironmentStartupValidator implements ApplicationRunner {
 
