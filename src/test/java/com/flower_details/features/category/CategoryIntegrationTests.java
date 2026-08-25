@@ -77,6 +77,25 @@ class CategoryIntegrationTests {
 	}
 
 	@Test
+	void administrativeListIncludesInactiveCategoriesAndExcludesSoftDeletedCategories() throws Exception {
+		String suffix = UUID.randomUUID().toString();
+		Cookie adminCookie = createAdminAndLogin(suffix);
+		Category active = categoryRepository.save(Category.create("Activa " + suffix, "Categoria activa", true));
+		Category inactive = categoryRepository.save(Category.create("Inactiva " + suffix, "Categoria inactiva", false));
+		Category deleted = categoryRepository.save(Category.create("Eliminada " + suffix, "Categoria eliminada", true));
+		categoryRepository.delete(deleted);
+
+		MvcResult result = mockMvc.perform(get("/api/categories/administration").cookie(adminCookie))
+				.andExpect(status().isOk())
+				.andReturn();
+
+		assertThat(result.getResponse().getContentAsString())
+				.contains(active.title())
+				.contains(inactive.title())
+				.doesNotContain(deleted.title());
+	}
+
+	@Test
 	void adminCanCreateUpdateAndSoftDeleteCategory() throws Exception {
 		String suffix = UUID.randomUUID().toString();
 		Cookie adminCookie = createAdminAndLogin(suffix);

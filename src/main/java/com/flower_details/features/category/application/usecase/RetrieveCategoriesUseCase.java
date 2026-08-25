@@ -15,7 +15,12 @@ public class RetrieveCategoriesUseCase {
 	private final CategoryRepository categoryRepository;
 
 	@Transactional(readOnly = true)
-	public PageResult<CategoryView> execute(PageRequest pageRequest) {
+	public PageResult<CategoryView> executePublicCatalog(PageRequest pageRequest) {
 		return categoryRepository.findAllActive(pageRequest).map(CategoryView::from);
+	}
+
+	@Transactional(readOnly = true)
+	public PageResult<CategoryView> executeForAdministration(PageRequest pageRequest) {
+		return categoryRepository.findAll(pageRequest).map(CategoryView::from);
 	}
 }

@@ -23,4 +23,6 @@ public interface CategoryRepository {
 	boolean existsByTitleForAnotherCategory(String title, Long categoryId);
 
 	PageResult<Category> findAllActive(PageRequest pageRequest);
+
+	PageResult<Category> findAll(PageRequest pageRequest);
 }

@@ -62,10 +62,23 @@ class JpaCategoryRepository implements CategoryRepository {
 	@Override
 	public PageResult<Category> findAllActive(PageRequest pageRequest) {
 		Page<CategoryJpaEntity> page = repository.findAllByActiveTrue(
-				org.springframework.data.domain.PageRequest.of(
-						pageRequest.page(), pageRequest.size(), Sort.by(Sort.Direction.ASC, "title")
-				)
+				toSpringPageRequest(pageRequest)
 		);
+		return toPageResult(page);
+	}
+
+	@Override
+	public PageResult<Category> findAll(PageRequest pageRequest) {
+		return toPageResult(repository.findAll(toSpringPageRequest(pageRequest)));
+	}
+
+	private static org.springframework.data.domain.PageRequest toSpringPageRequest(PageRequest pageRequest) {
+		return org.springframework.data.domain.PageRequest.of(
+				pageRequest.page(), pageRequest.size(), Sort.by(Sort.Direction.ASC, "title")
+		);
+	}
+
+	private static PageResult<Category> toPageResult(Page<CategoryJpaEntity> page) {
 		return new PageResult<>(
 				page.getContent().stream().map(CategoryPersistenceMapper::toDomain).toList(),
 				page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages()

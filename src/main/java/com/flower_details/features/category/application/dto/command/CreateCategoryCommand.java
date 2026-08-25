@@ -6,3 +6,5 @@ public record CreateCategoryCommand(
 		boolean active
 ) {
 }
+
+

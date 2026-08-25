@@ -44,7 +44,19 @@ class CategoryController {
 			@RequestParam(defaultValue = "20") @Positive(message = "El tamano debe ser mayor a cero") @Max(value = 100, message = "El tamano maximo es 100") int size
 	) {
 		return PageResponse.from(
-				retrieveCategoriesUseCase.execute(new PageRequest(page, size)),
+				retrieveCategoriesUseCase.executePublicCatalog(new PageRequest(page, size)),
+				CategoryResponse::from
+		);
+	}
+
+	@GetMapping("/administration")
+	@PreAuthorize("hasRole('ADMIN')")
+	PageResponse<CategoryResponse> listCategoriesForAdministration(
+			@RequestParam(defaultValue = "0") @PositiveOrZero(message = "La pagina no puede ser negativa") int page,
+			@RequestParam(defaultValue = "20") @Positive(message = "El tamano debe ser mayor a cero") @Max(value = 100, message = "El tamano maximo es 100") int size
+	) {
+		return PageResponse.from(
+				retrieveCategoriesUseCase.executeForAdministration(new PageRequest(page, size)),
 				CategoryResponse::from
 		);
 	}
