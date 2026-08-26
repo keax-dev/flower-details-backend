@@ -156,18 +156,14 @@ class ProductIntegrationTests {
 						.header(csrfToken.headerName(), csrfToken.token()))
 				.andExpect(status().isNoContent());
 
-		assertThat(productRepository.findById(productId)).isPresent()
-				.get()
-				.extracting(Product::active)
-				.isEqualTo(false);
+		assertThat(productRepository.findById(productId)).isEmpty();
 		assertThat(countProductRowsById(productId)).isEqualTo(1L);
-		assertThat(countActiveImageRowsByProductId(productId)).isGreaterThanOrEqualTo(2L);
+		assertThat(countActiveImageRowsByProductId(productId)).isZero();
 
 		mockMvc.perform(get("/api/products/{id}", productId))
 				.andExpect(status().isNotFound());
 		mockMvc.perform(get(secondImageUrl))
-				.andExpect(status().isOk())
-				.andExpect(result -> assertThat(result.getResponse().getContentAsByteArray()).isEqualTo(SECOND_IMAGE));
+				.andExpect(status().isNotFound());
 	}
 
 	@Test
