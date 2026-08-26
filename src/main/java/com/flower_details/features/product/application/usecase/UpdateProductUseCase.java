@@ -9,6 +9,7 @@ import com.flower_details.features.product.application.exception.ProductNotFound
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.repository.ProductImageRepository;
 import com.flower_details.features.product.domain.repository.ProductRepository;
+import com.flower_details.shared.domain.content.RichTextSanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class UpdateProductUseCase {
 	private final ProductRepository productRepository;
 	private final ProductImageRepository productImageRepository;
 	private final CategoryRepository categoryRepository;
+	private final RichTextSanitizer richTextSanitizer;
 
 	@Transactional
 	public ProductView execute(UpdateProductCommand command) {
@@ -27,7 +29,13 @@ public class UpdateProductUseCase {
 				.orElseThrow(() -> new ProductNotFoundException(command.id()));
 		Category category = categoryRepository.findById(command.categoryId())
 				.orElseThrow(() -> new CategoryNotFoundException(command.categoryId()));
-		product.update(command.categoryId(), command.title(), command.description(), command.price(), command.active());
+		product.update(
+				command.categoryId(),
+				command.title(),
+				richTextSanitizer.sanitizeDescription(command.description(), 1_000),
+				command.price(),
+				command.active()
+		);
 		Product saved = productRepository.save(product);
 		return ProductView.from(saved, category, productImageRepository.findActiveByProductId(saved.id()));
 	}

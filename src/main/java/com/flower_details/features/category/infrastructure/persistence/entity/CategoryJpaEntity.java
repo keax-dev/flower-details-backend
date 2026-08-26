@@ -32,7 +32,7 @@ public class CategoryJpaEntity {
 	@Column(nullable = false, length = 120)
 	private String title;
 
-	@Column(nullable = false, length = 500)
+	@Column(nullable = false, columnDefinition = "TEXT")
 	private String description;
 
 	@Column(nullable = false)

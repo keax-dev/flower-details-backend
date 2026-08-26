@@ -45,7 +45,7 @@ public class ProductJpaEntity {
 	@Column(nullable = false, length = 160)
 	private String title;
 
-	@Column(nullable = false, length = 1_000)
+	@Column(nullable = false, columnDefinition = "TEXT")
 	private String description;
 
 	@Column(nullable = false, precision = 12, scale = 2)

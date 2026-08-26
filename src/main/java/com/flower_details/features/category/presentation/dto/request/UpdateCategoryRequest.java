@@ -11,7 +11,7 @@ public record UpdateCategoryRequest(
 		String title,
 
 		@NotBlank(message = "La descripcion es obligatoria")
-		@Size(max = 500, message = "La descripcion no puede superar 500 caracteres")
+		@Size(max = 20_000, message = "La descripcion supera el limite permitido")
 		String description,
 
 		@NotNull(message = "El estado activo es obligatorio")

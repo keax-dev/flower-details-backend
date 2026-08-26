@@ -7,7 +7,7 @@ import java.time.Instant;
 public class Category {
 
 	private static final int TITLE_MAX_LENGTH = 120;
-	private static final int DESCRIPTION_MAX_LENGTH = 500;
+	private static final int DESCRIPTION_MAX_LENGTH = 20_000;
 
 	private final Long id;
 	private String title;

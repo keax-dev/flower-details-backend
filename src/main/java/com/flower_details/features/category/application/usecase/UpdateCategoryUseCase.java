@@ -6,6 +6,7 @@ import com.flower_details.features.category.application.exception.CategoryNotFou
 import com.flower_details.features.category.application.exception.CategoryTitleAlreadyExistsException;
 import com.flower_details.features.category.domain.model.Category;
 import com.flower_details.features.category.domain.repository.CategoryRepository;
+import com.flower_details.shared.domain.content.RichTextSanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UpdateCategoryUseCase {
 
 	private final CategoryRepository categoryRepository;
+	private final RichTextSanitizer richTextSanitizer;
 
 	@Transactional
 	public CategoryView execute(UpdateCategoryCommand command) {
@@ -23,7 +25,11 @@ public class UpdateCategoryUseCase {
 		if (categoryRepository.existsByTitleForAnotherCategory(command.title(), command.id())) {
 			throw new CategoryTitleAlreadyExistsException(command.title());
 		}
-		category.update(command.title(), command.description(), command.active());
+		category.update(
+				command.title(),
+				richTextSanitizer.sanitizeDescription(command.description(), 500),
+				command.active()
+		);
 		return CategoryView.from(categoryRepository.save(category));
 	}
 }

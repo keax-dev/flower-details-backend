@@ -17,7 +17,7 @@ public record UpdateProductRequest(
 		String title,
 
 		@NotBlank(message = "La descripcion es obligatoria")
-		@Size(max = 1_000, message = "La descripcion no puede superar 1000 caracteres")
+		@Size(max = 40_000, message = "La descripcion supera el limite permitido")
 		String description,
 
 		@NotNull(message = "El precio es obligatorio")

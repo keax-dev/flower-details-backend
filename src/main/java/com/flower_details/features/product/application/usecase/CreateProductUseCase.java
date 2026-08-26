@@ -7,6 +7,7 @@ import com.flower_details.features.product.application.dto.command.CreateProduct
 import com.flower_details.features.product.application.dto.view.ProductView;
 import com.flower_details.features.product.domain.model.Product;
 import com.flower_details.features.product.domain.repository.ProductRepository;
+import com.flower_details.shared.domain.content.RichTextSanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,13 +20,18 @@ public class CreateProductUseCase {
 
 	private final ProductRepository productRepository;
 	private final CategoryRepository categoryRepository;
+	private final RichTextSanitizer richTextSanitizer;
 
 	@Transactional
 	public ProductView execute(CreateProductCommand command) {
 		Category category = categoryRepository.findById(command.categoryId())
 				.orElseThrow(() -> new CategoryNotFoundException(command.categoryId()));
 		Product product = Product.create(
-				command.categoryId(), command.title(), command.description(), command.price(), command.active()
+				command.categoryId(),
+				command.title(),
+				richTextSanitizer.sanitizeDescription(command.description(), 1_000),
+				command.price(),
+				command.active()
 		);
 		return ProductView.from(productRepository.save(product), category, List.of());
 	}

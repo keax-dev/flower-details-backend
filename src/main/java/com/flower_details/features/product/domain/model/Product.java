@@ -8,7 +8,7 @@ import java.time.Instant;
 public class Product {
 
 	private static final int TITLE_MAX_LENGTH = 160;
-	private static final int DESCRIPTION_MAX_LENGTH = 1_000;
+	private static final int DESCRIPTION_MAX_LENGTH = 40_000;
 
 	private final Long id;
 	private Long categoryId;
