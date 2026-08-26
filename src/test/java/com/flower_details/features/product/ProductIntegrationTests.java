@@ -253,6 +253,76 @@ class ProductIntegrationTests {
 				.andExpect(status().isBadRequest());
 	}
 
+	@Test
+	void adminCanReorderAndDeleteEveryProductImage() throws Exception {
+		String suffix = UUID.randomUUID().toString();
+		Cookie adminCookie = createAdminAndLogin(suffix);
+		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
+		Category category = categoryRepository.save(Category.create(
+				"Orden " + suffix,
+				"Categoria para administrar imagenes",
+				true
+		));
+		Product product = productRepository.save(Product.create(
+				category.id(),
+				"Producto con imagenes " + suffix,
+				"Producto para probar orden de imagenes",
+				new java.math.BigDecimal("20.00"),
+				true
+		));
+
+		MvcResult firstUpload = mockMvc.perform(multipart("/api/products/{id}/images", product.id())
+						.file(image("images", "primera.png", FIRST_IMAGE))
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isCreated())
+				.andReturn();
+		Long firstImageId = readLong(firstUpload, "$.images[0].id");
+		String firstImageUrl = readString(firstUpload, "$.images[0].url");
+
+		MvcResult secondUpload = mockMvc.perform(multipart("/api/products/{id}/images", product.id())
+						.file(image("images", "segunda.png", SECOND_IMAGE))
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isCreated())
+				.andReturn();
+		Long secondImageId = readLong(secondUpload, "$.images[1].id");
+
+		mockMvc.perform(put("/api/products/{id}/images/positions", product.id())
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"positions":[
+								  {"imageId": %d, "sortOrder": 0},
+								  {"imageId": %d, "sortOrder": 1}
+								]}
+								""".formatted(secondImageId, firstImageId)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.images[0].id").value(secondImageId))
+				.andExpect(jsonPath("$.images[0].sortOrder").value(0))
+				.andExpect(jsonPath("$.images[1].id").value(firstImageId))
+				.andExpect(jsonPath("$.images[1].sortOrder").value(1));
+
+		mockMvc.perform(delete("/api/products/{productId}/images/{imageId}", product.id(), firstImageId)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.images.length()").value(1))
+				.andExpect(jsonPath("$.images[0].id").value(secondImageId))
+				.andExpect(jsonPath("$.images[0].sortOrder").value(0));
+
+		mockMvc.perform(get(firstImageUrl)).andExpect(status().isNotFound());
+
+		mockMvc.perform(delete("/api/products/{productId}/images/{imageId}", product.id(), secondImageId)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token()))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.images").isEmpty());
+
+		assertThat(countActiveImageRowsByProductId(product.id())).isZero();
+	}
+
 	private Cookie createAdminAndLogin(String suffix) throws Exception {
 		String email = "admin-products-" + suffix + "@flowerdetails.test";
 		String password = "Password123";

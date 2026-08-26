@@ -5,9 +5,12 @@ import com.flower_details.features.product.application.dto.query.ProductSearchQu
 import com.flower_details.features.product.application.usecase.CreateProductImagesUseCase;
 import com.flower_details.features.product.application.usecase.CreateProductUseCase;
 import com.flower_details.features.product.application.usecase.DeleteProductUseCase;
+import com.flower_details.features.product.application.usecase.DeleteProductImageUseCase;
 import com.flower_details.features.product.application.usecase.RetrieveProductsUseCase;
 import com.flower_details.features.product.application.usecase.UpdateProductUseCase;
+import com.flower_details.features.product.application.usecase.UpdateProductImagePositionsUseCase;
 import com.flower_details.features.product.presentation.dto.request.CreateProductRequest;
+import com.flower_details.features.product.presentation.dto.request.UpdateProductImagePositionsRequest;
 import com.flower_details.features.product.presentation.dto.request.UpdateProductRequest;
 import com.flower_details.features.product.presentation.dto.response.ProductResponse;
 import com.flower_details.features.product.presentation.upload.MultipartUploadFile;
@@ -49,6 +52,8 @@ class ProductController {
 	private final CreateProductUseCase createProductUseCase;
 	private final UpdateProductUseCase updateProductUseCase;
 	private final CreateProductImagesUseCase createProductImagesUseCase;
+	private final DeleteProductImageUseCase deleteProductImageUseCase;
+	private final UpdateProductImagePositionsUseCase updateProductImagePositionsUseCase;
 	private final DeleteProductUseCase deleteProductUseCase;
 
 	@GetMapping
@@ -128,6 +133,21 @@ class ProductController {
 			@RequestParam(name = "images") List<MultipartFile> images
 	) {
 		return ProductResponse.from(createProductImagesUseCase.execute(id, toUploadFiles(images)));
+	}
+
+	@PutMapping(path = "/{id}/images/positions", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize("hasRole('ADMIN')")
+	ProductResponse updateImagePositions(
+			@PathVariable Long id,
+			@Valid @RequestBody UpdateProductImagePositionsRequest request
+	) {
+		return ProductResponse.from(updateProductImagePositionsUseCase.execute(request.toCommand(id)));
+	}
+
+	@DeleteMapping("/{productId}/images/{imageId}")
+	@PreAuthorize("hasRole('ADMIN')")
+	ProductResponse deleteImage(@PathVariable Long productId, @PathVariable Long imageId) {
+		return ProductResponse.from(deleteProductImageUseCase.execute(productId, imageId));
 	}
 
 	@DeleteMapping("/{id}")

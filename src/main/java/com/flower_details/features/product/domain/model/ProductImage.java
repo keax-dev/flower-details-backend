@@ -136,6 +136,22 @@ public class ProductImage {
 		return active;
 	}
 
+	public ProductImage withSortOrder(int newSortOrder) {
+		return new ProductImage(
+				id,
+				productId,
+				url,
+				storedFileName,
+				originalFileName,
+				contentType,
+				sizeBytes,
+				newSortOrder,
+				active,
+				createdAt,
+				updatedAt
+		);
+	}
+
 	public Instant createdAt() {
 		return createdAt;
 	}
