@@ -4,6 +4,7 @@ import com.flower_details.features.users.application.dto.view.UserProfile;
 import com.flower_details.features.users.application.exception.UserNotFoundException;
 import com.flower_details.features.users.domain.model.Person;
 import com.flower_details.features.users.domain.model.User;
+import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.features.users.domain.repository.PersonRepository;
 import com.flower_details.features.users.domain.repository.UserRepository;
 import com.flower_details.shared.domain.pagination.PageRequest;
@@ -33,7 +34,15 @@ public class RetrieveUsersUseCase {
 
 	@Transactional(readOnly = true)
 	public PageResult<UserProfile> list(PageRequest pageRequest) {
-		PageResult<User> userPage = userRepository.findAll(pageRequest);
+		return profiles(userRepository.findAll(pageRequest));
+	}
+
+	@Transactional(readOnly = true)
+	public PageResult<UserProfile> listOperators(PageRequest pageRequest) {
+		return profiles(userRepository.findAllByRole(UserRole.OPERATOR, pageRequest));
+	}
+
+	private PageResult<UserProfile> profiles(PageResult<User> userPage) {
 		List<User> users = userPage.items();
 		Map<Long, Person> peopleByUserId = personRepository.findByUserIds(users.stream()
 				.map(User::id)

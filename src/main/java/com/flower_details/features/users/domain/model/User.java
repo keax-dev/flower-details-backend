@@ -65,6 +65,14 @@ public class User {
 		active = true;
 	}
 
+	public void updateEmail(String email) {
+		this.email = normalizeEmail(email);
+	}
+
+	public void updateActive(boolean active) {
+		this.active = active;
+	}
+
 	public void updatePasswordHash(String passwordHash) {
 		this.passwordHash = requireText(passwordHash, "La contrasena cifrada es obligatoria");
 	}

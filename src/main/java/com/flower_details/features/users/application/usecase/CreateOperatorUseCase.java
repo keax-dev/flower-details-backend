@@ -27,17 +27,19 @@ public class CreateOperatorUseCase {
 			throw new EmailAlreadyRegisteredException(command.email());
 		}
 
-		User operator = userRepository.save(User.createStaff(
+		User operator = User.createStaff(
 				command.email(),
 				passwordService.hash(command.password()),
 				UserRole.OPERATOR
-		));
+		);
+		operator.updateActive(command.active());
+		operator = userRepository.save(operator);
 		Person person = personRepository.save(Person.create(
 				operator.id(),
 				command.names(),
 				command.lastNames(),
 				command.phone(),
-				command.documentNumber()
+				null
 		));
 
 		return UserProfile.from(operator, person);

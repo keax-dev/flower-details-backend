@@ -58,6 +58,13 @@ public class Person {
 		return new Person(id, userId, names, lastNames, phone, documentNumber, createdAt, updatedAt);
 	}
 
+	public void update(String names, String lastNames, String phone, String documentNumber) {
+		this.names = requireText(names, "Los nombres son obligatorios");
+		this.lastNames = requireText(lastNames, "Los apellidos son obligatorios");
+		this.phone = normalizeOptional(phone);
+		this.documentNumber = normalizeOptional(documentNumber);
+	}
+
 	public Long id() {
 		return id;
 	}

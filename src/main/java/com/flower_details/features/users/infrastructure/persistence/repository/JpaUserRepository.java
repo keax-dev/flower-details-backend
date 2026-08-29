@@ -1,6 +1,7 @@
 package com.flower_details.features.users.infrastructure.persistence.repository;
 
 import com.flower_details.features.users.domain.model.User;
+import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.features.users.domain.repository.UserRepository;
 import com.flower_details.features.users.infrastructure.persistence.entity.UserJpaEntity;
 import com.flower_details.features.users.infrastructure.persistence.mapper.UserPersistenceMapper;
@@ -52,12 +53,29 @@ class JpaUserRepository implements UserRepository {
 	}
 
 	@Override
+	public boolean existsByEmailForAnotherUser(String email, Long userId) {
+		return repository.existsByEmailAndIdNot(normalizeEmail(email), userId);
+	}
+
+	@Override
 	public PageResult<User> findAll(PageRequest pageRequest) {
-		Page<UserJpaEntity> page = repository.findAll(
-				org.springframework.data.domain.PageRequest.of(
-						pageRequest.page(), pageRequest.size(), Sort.by(Sort.Direction.DESC, "createdAt")
-				)
+		Page<UserJpaEntity> page = repository.findAll(toSpringPageRequest(pageRequest));
+		return toPageResult(page);
+	}
+
+	@Override
+	public PageResult<User> findAllByRole(UserRole role, PageRequest pageRequest) {
+		Page<UserJpaEntity> page = repository.findAllByRole(role, toSpringPageRequest(pageRequest));
+		return toPageResult(page);
+	}
+
+	private static org.springframework.data.domain.PageRequest toSpringPageRequest(PageRequest pageRequest) {
+		return org.springframework.data.domain.PageRequest.of(
+				pageRequest.page(), pageRequest.size(), Sort.by(Sort.Direction.DESC, "createdAt")
 		);
+	}
+
+	private static PageResult<User> toPageResult(Page<UserJpaEntity> page) {
 		return new PageResult<>(
 				page.getContent().stream().map(UserPersistenceMapper::toDomain).toList(),
 				page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages()

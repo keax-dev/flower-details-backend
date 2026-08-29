@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -99,6 +100,24 @@ class UserSoftDeleteIntegrationTests {
 								}
 								""".formatted(operatorEmail, password)))
 				.andExpect(status().isUnauthorized());
+
+		mockMvc.perform(post("/api/users/operators")
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "names": "Nuevo operador",
+								  "lastNames": "Demo",
+								  "email": "%s",
+								  "password": "%s",
+								  "phone": "0988888888",
+								  "active": true
+								}
+								""".formatted(operatorEmail, password)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.email").value(operatorEmail));
+
 	}
 
 	@Test
@@ -129,7 +148,7 @@ class UserSoftDeleteIntegrationTests {
 								  "email": "%s",
 								  "password": "%s",
 								  "phone": "0999999999",
-								  "documentNumber": "DOC123"
+								  "active": true
 								}
 								""".formatted(operatorEmail, password)))
 				.andExpect(status().isCreated())
@@ -141,9 +160,26 @@ class UserSoftDeleteIntegrationTests {
 				createResult.getResponse().getContentAsString(), "$.id"
 		)).longValue();
 
-		mockMvc.perform(get("/api/users").param("size", "1").cookie(adminCookie))
+		mockMvc.perform(get("/api/users/operators").param("size", "1").cookie(adminCookie))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.items[?(@.id == %s)].email".formatted(operatorId)).value(operatorEmail));
+
+		mockMvc.perform(put("/api/users/operators/{id}", operatorId)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "names": "Operator Updated",
+								  "lastNames": "Demo Updated",
+								  "email": "%s",
+								  "phone": "0988888888",
+								  "active": false
+								}
+								""".formatted(operatorEmail)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.names").value("Operator Updated"))
+				.andExpect(jsonPath("$.active").value(false));
 
 		mockMvc.perform(patch("/api/users/{id}/deactivate", operatorId)
 						.cookie(adminCookie, csrfToken.cookie())

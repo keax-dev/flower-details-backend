@@ -6,7 +6,9 @@ import com.flower_details.features.users.application.usecase.DeleteUserUseCase;
 import com.flower_details.features.users.application.usecase.PatchActivateUserUseCase;
 import com.flower_details.features.users.application.usecase.PatchDeactivateUserUseCase;
 import com.flower_details.features.users.application.usecase.RetrieveUsersUseCase;
+import com.flower_details.features.users.application.usecase.UpdateOperatorUseCase;
 import com.flower_details.features.users.presentation.dto.request.CreateOperatorRequest;
+import com.flower_details.features.users.presentation.dto.request.UpdateOperatorRequest;
 import com.flower_details.features.users.presentation.dto.response.UserResponse;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.presentation.PageResponse;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,6 +38,7 @@ class UserController {
 
 	private final RetrieveUsersUseCase retrieveUsersUseCase;
 	private final CreateOperatorUseCase createOperatorUseCase;
+	private final UpdateOperatorUseCase updateOperatorUseCase;
 	private final PatchActivateUserUseCase patchActivateUserUseCase;
 	private final PatchDeactivateUserUseCase patchDeactivateUserUseCase;
 	private final DeleteUserUseCase deleteUserUseCase;
@@ -56,11 +60,32 @@ class UserController {
 		);
 	}
 
+	@GetMapping("/api/users/operators")
+	@PreAuthorize("hasRole('ADMIN')")
+	PageResponse<UserResponse> listOperators(
+			@RequestParam(defaultValue = "0") @PositiveOrZero(message = "La pagina no puede ser negativa") int page,
+			@RequestParam(defaultValue = "20") @Positive(message = "El tamano debe ser mayor a cero") @Max(value = 100, message = "El tamano maximo es 100") int size
+	) {
+		return PageResponse.from(
+				retrieveUsersUseCase.listOperators(new PageRequest(page, size)),
+				UserResponse::from
+		);
+	}
+
 	@PostMapping("/api/users/operators")
 	@PreAuthorize("hasRole('ADMIN')")
 	@ResponseStatus(HttpStatus.CREATED)
 	UserResponse createOperator(@Valid @RequestBody CreateOperatorRequest request) {
 		return UserResponse.from(createOperatorUseCase.execute(request.toCommand()));
+	}
+
+	@PutMapping("/api/users/operators/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	UserResponse updateOperator(
+			@PathVariable Long id,
+			@Valid @RequestBody UpdateOperatorRequest request
+	) {
+		return UserResponse.from(updateOperatorUseCase.execute(request.toCommand(id)));
 	}
 
 	@PatchMapping("/api/users/{id}/activate")

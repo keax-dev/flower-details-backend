@@ -11,7 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import lombok.AccessLevel;
@@ -26,10 +25,7 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-@Table(
-		name = "users",
-		uniqueConstraints = @UniqueConstraint(name = "uk_users_email", columnNames = "email")
-)
+@Table(name = "users")
 public class UserJpaEntity {
 
 	@Id

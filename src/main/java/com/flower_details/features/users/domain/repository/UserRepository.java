@@ -1,6 +1,7 @@
 package com.flower_details.features.users.domain.repository;
 
 import com.flower_details.features.users.domain.model.User;
+import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.domain.pagination.PageResult;
 
@@ -20,5 +21,9 @@ public interface UserRepository {
 
 	boolean existsByEmail(String email);
 
+	boolean existsByEmailForAnotherUser(String email, Long userId);
+
 	PageResult<User> findAll(PageRequest pageRequest);
+
+	PageResult<User> findAllByRole(UserRole role, PageRequest pageRequest);
 }

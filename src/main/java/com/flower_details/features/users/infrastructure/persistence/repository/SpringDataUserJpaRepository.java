@@ -1,6 +1,7 @@
 package com.flower_details.features.users.infrastructure.persistence.repository;
 
 import com.flower_details.features.users.infrastructure.persistence.entity.UserJpaEntity;
+import com.flower_details.features.users.domain.model.UserRole;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -20,5 +21,9 @@ interface SpringDataUserJpaRepository extends JpaRepository<UserJpaEntity, Long>
 
 	boolean existsByEmail(String email);
 
+	boolean existsByEmailAndIdNot(String email, Long id);
+
 	Page<UserJpaEntity> findAll(Pageable pageable);
+
+	Page<UserJpaEntity> findAllByRole(UserRole role, Pageable pageable);
 }
