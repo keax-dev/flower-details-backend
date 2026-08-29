@@ -42,6 +42,11 @@ public class RetrieveUsersUseCase {
 		return profiles(userRepository.findAllByRole(UserRole.OPERATOR, pageRequest));
 	}
 
+	@Transactional(readOnly = true)
+	public PageResult<UserProfile> listStaff(PageRequest pageRequest) {
+		return profiles(userRepository.findAllByRoleIn(List.of(UserRole.ADMIN, UserRole.OPERATOR), pageRequest));
+	}
+
 	private PageResult<UserProfile> profiles(PageResult<User> userPage) {
 		List<User> users = userPage.items();
 		Map<Long, Person> peopleByUserId = personRepository.findByUserIds(users.stream()

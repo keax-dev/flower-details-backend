@@ -22,11 +22,17 @@ public class UpdateOperatorUseCase {
 	private final PersonRepository personRepository;
 
 	@Transactional
-	public UserProfile execute(UpdateOperatorCommand command) {
+	public UserProfile execute(UpdateOperatorCommand command, Long requestedByUserId) {
 		User operator = userRepository.findById(command.operatorId())
 				.orElseThrow(() -> new UserNotFoundException(command.operatorId()));
-		if (operator.role() != UserRole.OPERATOR) {
-			throw new DomainException("El usuario indicado no es un operador");
+		if (!operator.role().isStaff()) {
+			throw new DomainException("El usuario indicado no pertenece al personal administrativo");
+		}
+		if (!command.role().isStaff()) {
+			throw new DomainException("El rol debe ser ADMIN u OPERATOR");
+		}
+		if (operator.id().equals(requestedByUserId) && operator.role() != command.role()) {
+			throw new DomainException("No puedes cambiar tu propio rol");
 		}
 		if (userRepository.existsByEmailForAnotherUser(command.email(), operator.id())) {
 			throw new EmailAlreadyRegisteredException(command.email());
@@ -35,6 +41,7 @@ public class UpdateOperatorUseCase {
 		Person person = personRepository.findByUserId(operator.id())
 				.orElseThrow(() -> new UserNotFoundException(operator.id()));
 		operator.updateEmail(command.email());
+		operator.updateRole(command.role());
 		operator.updateActive(command.active());
 		person.update(command.names(), command.lastNames(), command.phone(), null);
 

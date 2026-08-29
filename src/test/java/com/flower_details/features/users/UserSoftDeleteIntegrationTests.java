@@ -174,6 +174,7 @@ class UserSoftDeleteIntegrationTests {
 								  "lastNames": "Demo Updated",
 								  "email": "%s",
 								  "phone": "0988888888",
+								  "role": "OPERATOR",
 								  "active": false
 								}
 								""".formatted(operatorEmail)))
@@ -206,6 +207,64 @@ class UserSoftDeleteIntegrationTests {
 								{"email":"%s","password":"%s"}
 								""".formatted(operatorEmail, password)))
 				.andExpect(status().isOk());
+	}
+
+	@Test
+	void adminCanCreateAnotherAdministratorThroughStaffManagement() throws Exception {
+		String suffix = UUID.randomUUID().toString();
+		String password = "Password123";
+		User admin = userRepository.save(User.createStaff(
+				"admin-" + suffix + "@flowerdetails.test",
+				passwordService.hash(password),
+				UserRole.ADMIN
+		));
+		personRepository.save(Person.create(admin.id(), "Admin", "Demo", "0999999999", null));
+		Cookie adminCookie = login(admin.email(), password);
+		CsrfTestToken csrfToken = CsrfTestToken.obtain(mockMvc);
+
+		MvcResult createResult = mockMvc.perform(post("/api/users/staff")
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "names": "Administrador",
+								  "lastNames": "Nuevo",
+								  "email": "nuevo-admin-%s@flowerdetails.test",
+								  "password": "%s",
+								  "phone": "0988888888",
+								  "role": "ADMIN",
+								  "active": true
+								}
+								""".formatted(suffix, password)))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.role").value("ADMIN"))
+				.andExpect(jsonPath("$.active").value(true))
+				.andReturn();
+		Long createdAdminId = ((Number) com.jayway.jsonpath.JsonPath.read(
+				createResult.getResponse().getContentAsString(), "$.id"
+		)).longValue();
+
+		mockMvc.perform(put("/api/users/staff/{id}", createdAdminId)
+						.cookie(adminCookie, csrfToken.cookie())
+						.header(csrfToken.headerName(), csrfToken.token())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "names": "Administrador",
+								  "lastNames": "Nuevo",
+								  "email": "nuevo-admin-%s@flowerdetails.test",
+								  "phone": "0988888888",
+								  "role": "OPERATOR",
+								  "active": true
+								}
+								""".formatted(suffix)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.role").value("OPERATOR"));
+
+		mockMvc.perform(get("/api/users/staff").cookie(adminCookie))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.items[?(@.role == 'ADMIN')]").isNotEmpty());
 	}
 
 	@Test

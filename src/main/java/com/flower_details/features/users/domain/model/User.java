@@ -73,6 +73,13 @@ public class User {
 		this.active = active;
 	}
 
+	public void updateRole(UserRole role) {
+		if (role == null || !role.isStaff()) {
+			throw new DomainException("El rol debe ser ADMIN u OPERATOR");
+		}
+		this.role = role;
+	}
+
 	public void updatePasswordHash(String passwordHash) {
 		this.passwordHash = requireText(passwordHash, "La contrasena cifrada es obligatoria");
 	}

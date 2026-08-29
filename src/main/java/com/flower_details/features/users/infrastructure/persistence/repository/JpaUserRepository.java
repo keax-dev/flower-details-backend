@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.Locale;
+import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -66,6 +67,12 @@ class JpaUserRepository implements UserRepository {
 	@Override
 	public PageResult<User> findAllByRole(UserRole role, PageRequest pageRequest) {
 		Page<UserJpaEntity> page = repository.findAllByRole(role, toSpringPageRequest(pageRequest));
+		return toPageResult(page);
+	}
+
+	@Override
+	public PageResult<User> findAllByRoleIn(Collection<UserRole> roles, PageRequest pageRequest) {
+		Page<UserJpaEntity> page = repository.findAllByRoleIn(roles, toSpringPageRequest(pageRequest));
 		return toPageResult(page);
 	}
 

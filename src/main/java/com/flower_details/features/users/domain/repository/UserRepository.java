@@ -5,6 +5,7 @@ import com.flower_details.features.users.domain.model.UserRole;
 import com.flower_details.shared.domain.pagination.PageRequest;
 import com.flower_details.shared.domain.pagination.PageResult;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public interface UserRepository {
@@ -26,4 +27,6 @@ public interface UserRepository {
 	PageResult<User> findAll(PageRequest pageRequest);
 
 	PageResult<User> findAllByRole(UserRole role, PageRequest pageRequest);
+
+	PageResult<User> findAllByRoleIn(Collection<UserRole> roles, PageRequest pageRequest);
 }
