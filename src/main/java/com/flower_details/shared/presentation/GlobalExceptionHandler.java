@@ -3,6 +3,7 @@ package com.flower_details.shared.presentation;
 import com.flower_details.features.auth.application.exception.InvalidCredentialsException;
 import com.flower_details.features.auth.application.exception.UserInactiveException;
 import com.flower_details.features.category.application.exception.CategoryNotFoundException;
+import com.flower_details.features.category.application.exception.CategoryHasProductsException;
 import com.flower_details.features.category.application.exception.CategoryTitleAlreadyExistsException;
 import com.flower_details.features.cart.application.exception.CartItemNotFoundException;
 import com.flower_details.features.cart.application.exception.CartNotFoundException;
@@ -84,6 +85,14 @@ class GlobalExceptionHandler {
 			HttpServletRequest request
 	) {
 		return build(HttpStatus.NOT_FOUND, "Categoria no encontrada", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(CategoryHasProductsException.class)
+	ResponseEntity<ApiErrorResponse> handleCategoryHasProducts(
+			CategoryHasProductsException exception,
+			HttpServletRequest request
+	) {
+		return build(HttpStatus.CONFLICT, "Categoria con productos", exception.getMessage(), request);
 	}
 
 	@ExceptionHandler(ProductNotFoundException.class)

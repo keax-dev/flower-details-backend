@@ -47,6 +47,11 @@ class JpaProductRepository implements ProductRepository {
 	}
 
 	@Override
+	public boolean existsByCategoryId(Long categoryId) {
+		return repository.existsByCategory_Id(categoryId);
+	}
+
+	@Override
 	public Optional<Product> findById(Long id) {
 		return repository.findById(id).map(ProductPersistenceMapper::toDomain);
 	}

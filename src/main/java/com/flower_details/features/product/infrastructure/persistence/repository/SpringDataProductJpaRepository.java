@@ -10,6 +10,8 @@ import java.util.Optional;
 
 interface SpringDataProductJpaRepository extends JpaRepository<ProductJpaEntity, Long>, JpaSpecificationExecutor<ProductJpaEntity> {
 
+	boolean existsByCategory_Id(Long categoryId);
+
 	Optional<ProductJpaEntity> findById(Long id);
 
 	Optional<ProductJpaEntity> findByIdAndActiveTrueAndCategory_ActiveTrue(Long id);
